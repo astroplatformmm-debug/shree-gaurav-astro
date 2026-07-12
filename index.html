@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Shree Gaurav Astro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Lato:wght@400;500;600;700&family=Caveat:wght@500;600&family=Gochi+Hand&display=swap" rel="stylesheet" />
+  <style>
+    :root { --font-head: 'Playfair Display', serif; --font-body: 'Lato', sans-serif; }
+    body { font-family: var(--font-body); }
+    .font-head { font-family: var(--font-head); }
+
+    /* ===== Premium floating glass capsule navbar ===== */
+    .nav-wrap {
+      position: fixed;               /* locked at top while scrolling */
+      top: 24px;                     /* float ~24px from top */
+      left: 0;
+      right: 0;
+      z-index: 50;
+      display: flex;
+      justify-content: center;
+      pointer-events: none;          /* let clicks pass except on the pill */
+    }
+    .nav-wrap > * { pointer-events: auto; }
+    .glass-nav {
+      display: inline-flex;          /* width fits content */
+      align-items: center;
+      gap: 6px;
+      height: 59px;                  /* +5% */
+      padding: 0 23px;
+      border-radius: 19px;           /* rounded rectangle */
+      cursor: pointer;               /* click anywhere to toggle */
+      background: linear-gradient(180deg, rgba(40,28,14,0.72), rgba(20,13,6,0.78));
+      -webkit-backdrop-filter: blur(18px);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(212,175,55,0.25);   /* thin gold border */
+      /* soft golden inner glow + outer depth */
+      box-shadow:
+        inset 0 1px 0 rgba(255,225,160,0.14),
+        inset 0 0 26px rgba(201,149,61,0.10),
+        0 12px 40px rgba(0,0,0,0.45),
+        0 0 22px rgba(201,149,61,0.10);
+      animation: navIn 1.3s ease-out both;
+    }
+    @keyframes navIn {
+      from { opacity: 0; transform: translateY(-22px); filter: blur(10px); }
+      to   { opacity: 1; transform: translateY(0);     filter: blur(0);    }
+    }
+
+    .nav-item {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      padding: 9px 17px;
+      margin: 0 2px;                 /* ~28–36px total spacing between items */
+      font-size: 14.2px;             /* +5% */
+      font-weight: 600;              /* slightly more semi-bold */
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      color: #F5EAD6;                /* warm white */
+      border-radius: 999px;
+      cursor: pointer;
+      -webkit-font-smoothing: antialiased;
+      transition: color 300ms ease, transform 300ms ease, text-shadow 300ms ease;
+    }
+    .nav-item:hover {
+      color: #E9C877;                /* warm gold */
+      transform: translateY(-2px);
+      text-shadow: 0 0 14px rgba(233,200,119,0.55);
+    }
+
+    /* Active tab = illuminated golden capsule */
+    .nav-item.active {
+      color: #2a1c08;
+      font-weight: 700;
+      background: linear-gradient(180deg, #F3D488 0%, #D4A24C 55%, #B9821F 100%);
+      padding: 8px 18px;
+      border: 1px solid rgba(255,225,150,0.55);
+      box-shadow:
+        inset 0 1px 1px rgba(255,245,210,0.7),
+        inset 0 -2px 6px rgba(120,80,20,0.35),
+        0 0 10px rgba(233,200,119,0.55),
+        0 0 22px rgba(201,149,61,0.45);
+    }
+    .nav-item.active:hover {
+      color: #2a1c08;
+      transform: translateY(-2px);
+      text-shadow: none;
+    }
+
+    /* Collapsible group — smooth width animation (JS sets the px width) */
+    .nav-extra-wrap {
+      flex: 0 0 auto;
+      min-width: 0;                  /* let width:0 actually take effect */
+      overflow: hidden;
+    }
+    .nav-extra-inner {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      width: max-content;
+    }
+
+    /* ===== Hero load animations (gentle & slow) ===== */
+    .hero-bg {
+      position: absolute;
+      inset: 12px;
+      border-radius: 30px;
+      overflow: hidden;
+      background-color: #3a2a12;
+      background-image: url('gaurav-hero.png');
+      background-size: cover;
+      background-position: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+      animation: heroDrop 2400ms cubic-bezier(.22,1,.36,1) backwards;
+    }
+    @keyframes heroDrop {
+      from { opacity: 0; transform: translateY(-80px) scale(1.05); }
+      to   { opacity: 1; transform: translateY(0)     scale(1);    }
+    }
+    .hero-card {
+      animation: heroSlideRight 2200ms cubic-bezier(.22,1,.36,1) backwards;
+      animation-delay: 700ms;
+    }
+    @keyframes heroSlideRight {
+      from { opacity: 0; transform: translateX(100px); }
+      to   { opacity: 1; transform: translateX(0);     }
+    }
+
+    /* ===== Scroll-reveal (staggered) ===== */
+    .reveal-up, .reveal-down, .reveal-left, .reveal-right, .reveal-back {
+      opacity: 0;
+      /* !important so Tailwind's transition-shadow can't clobber it */
+      transition: opacity 1800ms ease, transform 1900ms cubic-bezier(.22,1,.36,1) !important;
+      will-change: opacity, transform;
+    }
+    .reveal-up    { transform: translateY(80px);  }
+    .reveal-down  { transform: translateY(-80px); }
+    .reveal-left  { transform: translateX(-120px); }
+    .reveal-right { transform: translateX(120px);  }
+    .reveal-back  { transform: translateY(60px) scale(.92); }
+    .reveal-up.in, .reveal-down.in, .reveal-left.in, .reveal-right.in, .reveal-back.in {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* ===== Scroll reveal system ===== */
+    .reveal {
+      opacity: 0;
+      transition: opacity 850ms cubic-bezier(.22,1,.36,1),
+                  transform 850ms cubic-bezier(.22,1,.36,1);
+      will-change: opacity, transform;
+    }
+    .reveal-top    { transform: translateY(-80px); }
+    .reveal-bottom { transform: translateY(80px); }
+    .reveal-back   { transform: scale(.88); }
+    .reveal.in     { opacity: 1; transform: none; }
+
+    /* ===== Buttons: shadow + hover animation ===== */
+    .btn {
+      box-shadow: 0 6px 18px rgba(0,0,0,0.28);
+      transition: transform 260ms cubic-bezier(.22,1,.36,1),
+                  box-shadow 260ms ease,
+                  filter 260ms ease;
+    }
+    .btn:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 14px 30px rgba(201,149,61,0.5), 0 0 18px rgba(233,200,119,0.35);
+      filter: brightness(1.06);
+    }
+    .btn:active { transform: translateY(-1px) scale(.99); }
+
+    /* text-style link buttons (LEARN MORE, CTA) */
+    .btn-link {
+      transition: color 280ms ease,
+                  transform 280ms cubic-bezier(.22,1,.36,1),
+                  text-shadow 280ms ease,
+                  letter-spacing 280ms ease !important;
+    }
+    .btn-link:hover {
+      transform: translateX(5px);
+      letter-spacing: 0.06em;
+      text-shadow: 0 0 12px rgba(201,149,61,0.45);
+    }
+
+    /* Service cards — hover lift + image zoom */
+    .svc-card {
+      transition: transform 400ms cubic-bezier(.22,1,.36,1),
+                  box-shadow 400ms ease !important;
+    }
+    .svc-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 22px 44px rgba(201,149,61,0.28);
+    }
+    .svc-img { transition: transform 750ms cubic-bezier(.22,1,.36,1); }
+    .svc-card:hover .svc-img { transform: scale(1.09); }
+
+    /* Stat boxes — hover lift + gold glow */
+    .stat-box {
+      transition: transform 380ms cubic-bezier(.22,1,.36,1),
+                  box-shadow 380ms ease,
+                  border-color 380ms ease;
+    }
+    .stat-box:hover {
+      transform: translateY(-6px);
+      border-color: rgba(212,162,76,0.75);
+      box-shadow: 0 0 30px rgba(201,149,61,0.35), inset 0 0 22px rgba(201,149,61,0.15);
+    }
+
+    /* gentle floating ornament */
+    @keyframes floaty {
+      0%,100% { transform: translateY(0); }
+      50%     { transform: translateY(-6px); }
+    }
+    .floaty { animation: floaty 4s ease-in-out infinite; }
+
+    /* Handwritten "Shree Gaurav Astro" — writes itself in on load */
+    /* Gincu — drop Gincu.ttf/.otf into the site folder and it loads automatically */
+    @font-face {
+      font-family: 'Gincu';
+      src: url('Gincu.woff2') format('woff2'),
+           url('Gincu.woff')  format('woff'),
+           url('Gincu.otf')   format('opentype'),
+           url('Gincu.ttf')   format('truetype');
+      font-weight: normal;
+      font-display: swap;
+    }
+    .handwrite {
+      position: absolute;
+      left: 16%;
+      bottom: 14%;
+      z-index: 12;
+      /* Gincu first; thin chalk-style fallback (image-2 look) until the file is added */
+      font-family: 'Gincu', 'Gochi Hand', 'Caveat', cursive;
+      font-weight: 500;
+      font-size: clamp(30px, 5.2vw, 64px);
+      line-height: 1.05;
+      color: #f7f0e0;
+      text-shadow: 0 2px 9px rgba(0,0,0,0.55), 0 0 16px rgba(233,200,119,0.3);
+      transform: rotate(-6deg);
+      white-space: nowrap;
+      min-height: 1.2em;
+      text-align: center;
+    }
+
+    /* Stat boxes — gold framed look (image-1 style) */
+    .stat-box {
+      border: 1.5px solid rgba(212,162,76,0.7);
+      box-shadow:
+        inset 0 0 0 4px rgba(16,10,4,0.95),
+        inset 0 0 0 5.5px rgba(212,162,76,0.45),
+        inset 0 1px 0 rgba(255,225,160,0.15),
+        0 0 26px rgba(201,149,61,0.18);
+      transition: transform 380ms cubic-bezier(.22,1,.36,1),
+                  box-shadow 380ms ease,
+                  border-color 380ms ease;
+    }
+    .stat-box:hover {
+      transform: translateY(-6px);
+      border-color: rgba(233,200,119,0.9);
+      box-shadow:
+        inset 0 0 0 4px rgba(16,10,4,0.95),
+        inset 0 0 0 5.5px rgba(233,200,119,0.6),
+        0 0 34px rgba(201,149,61,0.4);
+    }
+    /* diamond separators between stat boxes */
+    .stat-box { position: relative; }
+    @media (min-width: 1024px) {
+      .stat-box:not(:last-child)::after {
+        content: "\2726";
+        position: absolute;
+        right: -22px; top: 50%;
+        transform: translateY(-50%);
+        color: rgba(212,162,76,0.85);
+        font-size: 13px;
+        text-shadow: 0 0 8px rgba(201,149,61,0.6);
+      }
+    }
+
+    /* Premium pulsing separator dots */
+    @keyframes dotPulse {
+      0%,100% { transform: scale(1);    opacity: .55; }
+      50%     { transform: scale(1.4);  opacity: 1;   }
+    }
+    .sep-dot { animation: dotPulse 2.6s ease-in-out infinite; }
+    .sep-dot:nth-child(2) { animation-delay: .3s; }
+    .sep-dot:nth-child(3) { animation-delay: .6s; }
+    .sep-dot:nth-child(4) { animation-delay: .9s; }
+    .sep-dot:nth-child(5) { animation-delay: 1.2s; }
+    .sep-dot:nth-child(6) { animation-delay: 1.5s; }
+
+    /* Ornate gold corner frame (premium light panels) */
+    .ornate::before, .ornate::after {
+      content: "";
+      position: absolute;
+      width: 46px; height: 46px;
+      border: 2px solid rgba(201,149,61,0.55);
+      pointer-events: none;
+    }
+    .ornate::before { top: 14px; left: 14px; border-right: 0; border-bottom: 0; border-top-left-radius: 12px; }
+    .ornate::after  { bottom: 14px; right: 14px; border-left: 0; border-top: 0; border-bottom-right-radius: 12px; }
+
+    /* IPS angled dark panel (image-3 style) */
+    .ips-panel {
+      background: linear-gradient(180deg, rgba(22,16,8,0.92), rgba(14,9,4,0.9));
+      -webkit-backdrop-filter: blur(3px);
+      backdrop-filter: blur(3px);
+      -webkit-clip-path: polygon(0 0, 100% 0, 82% 100%, 0 100%);
+      clip-path: polygon(0 0, 100% 0, 82% 100%, 0 100%);
+    }
+  </style>
+</head>
+<body class="bg-[#FAF7F1]">
+
+  <!-- ===== HERO ===== -->
+  <section
+    class="relative w-full overflow-hidden min-h-screen flex flex-col"
+    style="background-color:#3a2a12;">
+
+    <!-- animated hero background (drops in from top on load) -->
+    <div class="hero-bg"></div>
+
+    <!-- handwritten signature — typed in letter by letter on load -->
+    <div class="handwrite" id="handwrite" data-text="Shree Gaurav|Astro"></div>
+
+    <!-- ===== NAVBAR — floating premium glass capsule ===== -->
+    <div class="nav-wrap px-4">
+      <nav id="navbar" class="glass-nav" aria-label="Main navigation" title="Click to expand / shrink">
+        <a href="#" class="nav-item active">Home</a>
+        <a href="#" class="nav-item">About</a>
+        <a href="#" class="nav-item">Consultation</a>
+        <a href="#" class="nav-item">Courses</a>
+
+        <!-- collapsible group (smooth grid collapse) -->
+        <div id="nav-extra-wrap" class="nav-extra-wrap">
+          <div class="nav-extra-inner">
+            <a href="#" class="nav-item">Media</a>
+            <a href="#" class="nav-item">STI Workshop</a>
+            <a href="#" class="nav-item">Articles</a>
+            <a href="#" class="nav-item">Contact</a>
+          </div>
+        </div>
+      </nav>
+    </div>
+
+    <!-- ===== HERO CONTENT (text card overlays the hero image on the right) ===== -->
+    <div class="relative z-10 flex-1 mx-auto w-full max-w-[1500px] px-4 sm:px-6 pt-6 pb-10 flex items-center justify-center lg:justify-end">
+        <!-- Text card -->
+        <div class="hero-card w-full max-w-[720px] rounded-3xl bg-[#2a1d0e]/75 backdrop-blur-sm ring-1 ring-[#C8953D]/25 px-10 sm:px-14 py-10 sm:py-12 text-center shadow-2xl">
+            <h1 class="font-head text-[#e9c877] leading-tight text-3xl sm:text-4xl">
+              Three Decades of Consultancy<br />
+              <span class="text-2xl sm:text-3xl">in</span><br />
+              Astrology-Vastu-Meditation
+            </h1>
+
+            <p class="mt-6 text-[#e7ddcf] text-sm sm:text-[15px] leading-relaxed">
+              Decades of proven expertise, experience never-before Astrology - Vastu consultations &amp; Meditation Sessions designed to solve real-life challenges in career, relationships, finances and health. Regain clarity through deep knowledge and achieve confidence through practical, result-oriented strategies
+            </p>
+
+            <p class="mt-6 italic text-[#e9c877] text-sm sm:text-base">
+              &ldquo;When the right decision matters, guesswork is not an option.&rdquo;
+            </p>
+
+            <div class="mt-8 flex justify-center">
+              <a href="#" class="btn rounded-lg bg-[#C8953D] hover:bg-[#A9762C] text-[#241a0f] font-semibold text-sm px-8 py-3">
+                Request Personal Consultation
+              </a>
+            </div>
+          </div>
+    </div>
+
+    <!-- thin gold bottom border -->
+    <div class="h-1 w-full bg-[#C8953D]/60"></div>
+  </section>
+
+  <!-- ===== EXPLORE SERVICES ===== -->
+  <section class="w-full bg-[#FAF7F1] pt-6 pb-10 px-4">
+    <div class="reveal-back mx-auto max-w-[1480px] rounded-[32px] bg-[#F6ECD8] ring-1 ring-[#E6D8C3] px-6 sm:px-12 py-12 sm:py-16 shadow-lg">
+
+      <!-- Heading -->
+      <h2 class="font-head text-center text-4xl sm:text-5xl text-[#1F1B17]">Explore Services</h2>
+      <div class="flex items-center justify-center gap-3 mt-4 mb-8 text-[#C8953D]">
+        <span class="h-px w-24 sm:w-40 bg-[#D9C39A]"></span>
+        <span class="text-lg">&#10022;</span>
+        <span class="h-px w-24 sm:w-40 bg-[#D9C39A]"></span>
+      </div>
+
+      <!-- Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+        <!-- Card -->
+        <div class="reveal-down svc-card rounded-2xl bg-[#FAF7F1] ring-1 ring-[#EADFC6] p-4 shadow-sm">
+          <div class="h-40 w-full rounded-xl overflow-hidden bg-[#EADFC6]">
+            <img src="service-astrology.png" alt="Astrology Consultation" class="svc-img h-full w-full object-cover" onerror="this.style.display='none'" />
+          </div>
+          <h3 class="font-head text-xl text-[#1F1B17] mt-5">Astrology Consultation</h3>
+          <p class="text-[13px] leading-relaxed text-[#5E554C] mt-3 min-h-[60px]">Experience personalized Astrology Consults - Personal or Horoscope Matching.</p>
+          <a href="#" class="btn-link inline-flex items-center gap-2 mt-4 text-[13px] font-semibold tracking-wide text-[#C8953D] hover:text-[#A9762C] border-b border-[#C8953D]/40 pb-1 transition-colors">LEARN MORE <span class="text-base leading-none">+</span></a>
+        </div>
+
+        <!-- Card -->
+        <div class="reveal-up svc-card rounded-2xl bg-[#FAF7F1] ring-1 ring-[#EADFC6] p-4 shadow-sm">
+          <div class="h-40 w-full rounded-xl overflow-hidden bg-[#EADFC6]">
+            <img src="service-vastu.png" alt="Vastu Consultation" class="svc-img h-full w-full object-cover" onerror="this.style.display='none'" />
+          </div>
+          <h3 class="font-head text-xl text-[#1F1B17] mt-5">Vastu Consultation</h3>
+          <p class="text-[13px] leading-relaxed text-[#5E554C] mt-3 min-h-[60px]">Achieve Harmony in Perfect Vastu - We Harmonize Needed.</p>
+          <a href="#" class="btn-link inline-flex items-center gap-2 mt-4 text-[13px] font-semibold tracking-wide text-[#C8953D] hover:text-[#A9762C] border-b border-[#C8953D]/40 pb-1 transition-colors">LEARN MORE <span class="text-base leading-none">+</span></a>
+        </div>
+
+        <!-- Card -->
+        <div class="reveal-down svc-card rounded-2xl bg-[#FAF7F1] ring-1 ring-[#EADFC6] p-4 shadow-sm">
+          <div class="h-40 w-full rounded-xl overflow-hidden bg-[#EADFC6]">
+            <img src="service-courses.jpeg" alt="Live Courses" class="svc-img h-full w-full object-cover" onerror="this.style.display='none'" />
+          </div>
+          <h3 class="font-head text-xl text-[#1F1B17] mt-5">Live Courses</h3>
+          <p class="text-[13px] leading-relaxed text-[#5E554C] mt-3 min-h-[60px]">One to One Live Course - Astro Vastu, Vedic Astrology, KP Astrology, Nadi Astrology, Medical Astrology, Palmistry Jumbo, Lalitavadya, Jaiminiya, Astro Research Course, Tarot Reading, Sadhana, Prediction Module - P's.</p>
+          <a href="#" class="btn-link inline-flex items-center gap-2 mt-4 text-[13px] font-semibold tracking-wide text-[#C8953D] hover:text-[#A9762C] border-b border-[#C8953D]/40 pb-1 transition-colors">LEARN MORE <span class="text-base leading-none">+</span></a>
+        </div>
+
+        <!-- Card -->
+        <div class="reveal-up svc-card rounded-2xl bg-[#FAF7F1] ring-1 ring-[#EADFC6] p-4 shadow-sm">
+          <div class="h-40 w-full rounded-xl overflow-hidden bg-[#EADFC6]">
+            <img src="service-meditation.png" alt="Meditation" class="svc-img h-full w-full object-cover" onerror="this.style.display='none'" />
+          </div>
+          <h3 class="font-head text-xl text-[#1F1B17] mt-5">Meditation</h3>
+          <p class="text-[13px] leading-relaxed text-[#5E554C] mt-3 min-h-[60px]">Experience Deep Calm, Emotional Balance, Spiritual Enhancement &amp; Reduced Stress. Bhagavad Prapti (Individual) Guided Meditation Sessions.</p>
+          <a href="#" class="btn-link inline-flex items-center gap-2 mt-4 text-[13px] font-semibold tracking-wide text-[#C8953D] hover:text-[#A9762C] border-b border-[#C8953D]/40 pb-1 transition-colors">LEARN MORE <span class="text-base leading-none">+</span></a>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- carousel dots -->
+    <div class="flex items-center justify-center gap-3 mt-10">
+      <span class="sep-dot h-2.5 w-2.5 rounded-full bg-[#D9C39A]"></span>
+      <span class="sep-dot h-2.5 w-2.5 rounded-full bg-[#D9C39A]"></span>
+      <span class="sep-dot h-4 w-4 rounded-full bg-[#C8953D] shadow-[0_0_12px_rgba(201,149,61,0.7)]"></span>
+      <span class="sep-dot h-2.5 w-2.5 rounded-full bg-[#D9C39A]"></span>
+      <span class="sep-dot h-2.5 w-2.5 rounded-full bg-[#D9C39A]"></span>
+      <span class="sep-dot h-2.5 w-2.5 rounded-full bg-[#D9C39A]"></span>
+    </div>
+  </section>
+
+  <!-- ===== EXPERIENCE AT A GLANCE ===== -->
+  <section id="glance" class="w-full bg-[#140d06] py-16 px-4"
+    style="background-image: radial-gradient(90% 120% at 50% 0%, rgba(201,149,61,0.14), rgba(10,7,3,0) 60%);">
+    <h2 class="font-head text-center text-3xl sm:text-4xl text-[#F5EAD6]">Experience at a <span class="text-[#D4A24C]">Glance</span></h2>
+    <div class="flex items-center justify-center gap-3 mt-4 mb-12 text-[#C8953D]">
+      <span class="h-px w-20 sm:w-32 bg-[#C8953D]/40"></span>
+      <span>&#10022;</span>
+      <span class="h-px w-20 sm:w-32 bg-[#C8953D]/40"></span>
+    </div>
+
+    <div class="reveal-up mx-auto max-w-[1080px] grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 sm:gap-8">
+      <!-- stat -->
+      <div class="stat-box rounded-2xl bg-gradient-to-b from-[#1e1509] to-[#100a04] border border-[#C8953D]/35 px-4 py-7 text-center shadow-[0_0_22px_rgba(201,149,61,0.12)]">
+        <div class="font-head text-3xl sm:text-4xl text-[#E9C877] drop-shadow-[0_0_10px_rgba(233,200,119,0.45)]"><span class="counter" data-value="30" data-suffix="+">0</span></div>
+        <div class="mt-3 text-[10px] sm:text-[11px] font-semibold tracking-[0.15em] text-[#B79A6B] uppercase">Years of Experience</div>
+      </div>
+      <!-- stat -->
+      <div class="stat-box rounded-2xl bg-gradient-to-b from-[#1e1509] to-[#100a04] border border-[#C8953D]/35 px-4 py-7 text-center shadow-[0_0_22px_rgba(201,149,61,0.12)]">
+        <div class="font-head text-3xl sm:text-4xl text-[#E9C877] drop-shadow-[0_0_10px_rgba(233,200,119,0.45)]"><span class="counter" data-value="100" data-suffix="K">0</span></div>
+        <div class="mt-3 text-[10px] sm:text-[11px] font-semibold tracking-[0.15em] text-[#B79A6B] uppercase">Consultations</div>
+      </div>
+      <!-- stat -->
+      <div class="stat-box rounded-2xl bg-gradient-to-b from-[#1e1509] to-[#100a04] border border-[#C8953D]/35 px-4 py-7 text-center shadow-[0_0_22px_rgba(201,149,61,0.12)]">
+        <div class="font-head text-3xl sm:text-4xl text-[#E9C877] drop-shadow-[0_0_10px_rgba(233,200,119,0.45)]"><span class="counter" data-value="99" data-suffix="%">0</span></div>
+        <div class="mt-3 text-[10px] sm:text-[11px] font-semibold tracking-[0.15em] text-[#B79A6B] uppercase">Satisfied Clients</div>
+      </div>
+      <!-- stat -->
+      <div class="stat-box rounded-2xl bg-gradient-to-b from-[#1e1509] to-[#100a04] border border-[#C8953D]/35 px-4 py-7 text-center shadow-[0_0_22px_rgba(201,149,61,0.12)]">
+        <div class="font-head text-3xl sm:text-4xl text-[#E9C877] drop-shadow-[0_0_10px_rgba(233,200,119,0.45)]"><span class="counter" data-value="1" data-suffix="K+">0</span></div>
+        <div class="mt-3 text-[10px] sm:text-[11px] font-semibold tracking-[0.15em] text-[#B79A6B] uppercase">Students Taught</div>
+      </div>
+      <!-- stat -->
+      <div class="stat-box rounded-2xl bg-gradient-to-b from-[#1e1509] to-[#100a04] border border-[#C8953D]/35 px-4 py-7 text-center shadow-[0_0_22px_rgba(201,149,61,0.12)]">
+        <div class="font-head text-3xl sm:text-4xl text-[#E9C877] drop-shadow-[0_0_10px_rgba(233,200,119,0.45)]"><span class="counter" data-value="30" data-suffix="+">0</span></div>
+        <div class="mt-3 text-[10px] sm:text-[11px] font-semibold tracking-[0.15em] text-[#B79A6B] uppercase">Global Workshops</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== IPS — INSTANT PREDICTION SYSTEM ===== -->
+  <section class="w-full bg-[#FAF7F1] px-4 pt-8 pb-3">
+    <div class="reveal-right w-full relative overflow-hidden rounded-3xl ring-1 ring-[#E6D8C3] shadow-lg"
+      style="aspect-ratio:1645/956; min-height:480px; background-color:#2a2016; background-image:url('ips-bg.png'); background-size:cover; background-position:center;">
+
+      <!-- content sits over the image's built-in light left panel -->
+      <div class="absolute inset-0 z-10 w-[54%] px-6 sm:px-12 py-6 lg:py-10 flex flex-col justify-center">
+        <h2 class="font-head text-4xl sm:text-6xl text-[#1a120a]">IPS</h2>
+        <p class="font-head italic text-lg sm:text-2xl text-[#3b2c17] mt-1 border-b-2 border-[#5E4A2A]/50 pb-2 w-fit">Instant Prediction System</p>
+
+        <!-- angled dark panel -->
+        <div class="ips-panel mt-4 sm:mt-6 rounded-xl px-6 sm:px-9 py-5 sm:py-7 pr-12 sm:pr-24 w-full max-w-[560px] shadow-2xl">
+          <p class="text-[#ece0d0] text-[12.5px] sm:text-sm leading-relaxed">
+            A practical timing method developed through years of observation and real-life event patterns.
+          </p>
+          <p class="text-[#ece0d0] text-sm sm:text-[15px] leading-relaxed mt-5">
+            It helps understand the direction of a situation by reading the moment in an instant through the environment and the signals around you before making an important decision or predicting future instantly.
+          </p>
+        </div>
+
+        <!-- full CTA button -->
+        <div class="mt-5">
+          <a href="#" class="btn inline-block rounded-full bg-gradient-to-b from-[#F3D488] to-[#C8953D] hover:to-[#A9762C] text-[#241a0f] font-bold text-[11px] sm:text-sm tracking-wide px-5 sm:px-8 py-2.5 sm:py-3.5 ring-1 ring-[#F3D488]/60">
+            GET YOUR INSTANT PREDICTIONS NOW!!
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TRUSTED BY ===== -->
+  <section class="w-full bg-[#FAF7F1] px-4 pt-3">
+    <div class="reveal-left w-full relative overflow-hidden rounded-3xl ring-1 ring-[#E6D8C3] shadow-lg flex items-stretch justify-end"
+      style="aspect-ratio:2137/736; background-color:#2a2016; background-image:url('trusted-by-bg.png'); background-size:cover; background-position:center;">
+
+      <!-- soft scrim so text on the right stays legible -->
+      <div class="absolute inset-0 pointer-events-none" style="background:linear-gradient(90deg, rgba(20,13,6,0) 45%, rgba(20,13,6,0.35) 70%, rgba(20,13,6,0.55) 100%);"></div>
+
+      <!-- text placed inside the image's built-in right panel -->
+      <div class="relative z-10 w-[46%] max-w-[560px] mr-[11%] px-4 sm:px-6 py-[5%] text-center flex flex-col justify-evenly">
+        <h2 class="font-head text-5xl sm:text-[56px] text-[#F5EAD6] tracking-wide drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]">Trusted By</h2>
+
+        <p class="text-[#f0e6d6] text-[14px] sm:text-base leading-relaxed mt-4 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]">
+          Trusted advisor to founders, business owners &amp; professionals associated with some of India's most respected prominent brands
+        </p>
+
+        <!-- gold ornament divider -->
+        <div class="flex items-center justify-center gap-3 my-3 text-[#D4A24C]">
+          <span class="h-px w-16 sm:w-24 bg-[#C8953D]/40"></span>
+          <span class="text-xs">&#10022;</span>
+          <span class="h-px w-16 sm:w-24 bg-[#C8953D]/40"></span>
+        </div>
+
+        <p class="text-[#f0e6d6] text-[14px] sm:text-base leading-relaxed drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]">
+          His work remains deeply personal &amp; confidential, built on trust developed over years of consistent guidance and accurate insights
+        </p>
+
+        <div class="mt-5 flex justify-center">
+          <a href="#" class="btn rounded-full bg-gradient-to-b from-[#F3D488] to-[#C8953D] hover:to-[#A9762C] text-[#241a0f] font-semibold text-[13px] sm:text-sm px-8 sm:px-10 py-2.5 sm:py-3 ring-1 ring-[#F3D488]/60">
+            Request Personal Consultation
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== WHATSAPP CTA CARDS (light premium, ornate corners) ===== -->
+  <section class="w-full bg-[#FAF7F1] px-4 py-14">
+    <div class="reveal-up ornate mx-auto max-w-[1200px] rounded-[28px] ring-1 ring-[#D9C39A] px-6 sm:px-14 py-12 sm:py-16 relative overflow-hidden shadow-[0_18px_50px_rgba(150,110,40,0.12)]"
+      style="background:
+        radial-gradient(70% 100% at 50% 0%, rgba(212,162,76,0.10), rgba(201,149,61,0) 65%),
+        linear-gradient(180deg, #FCF6E9, #F6ECD6);">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 relative z-10">
+
+        <!-- left CTA -->
+        <div class="rounded-2xl bg-[#FCF8EF] ring-1 ring-[#EADFC6] px-6 py-10 text-center shadow-[0_8px_24px_rgba(150,110,40,0.1)]">
+          <h3 class="font-head text-2xl sm:text-[28px] text-[#8a6a2f]">Take Your Consultation Now</h3>
+          <p class="text-[#5E554C] text-sm mt-4">Seeking Clarity? Next Step is Simple</p>
+          <div class="mt-7 flex justify-center">
+            <a href="#" class="btn inline-flex items-center gap-2 rounded-full bg-gradient-to-b from-[#F3D488] to-[#C8953D] hover:to-[#A9762C] text-[#241a0f] font-semibold text-sm px-6 py-3 shadow-lg ring-1 ring-[#F3D488]/60 transition-colors">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2m0 18.1c-1.53 0-3.03-.41-4.34-1.19l-.31-.18-3.11.82.83-3.03-.2-.32a8.2 8.2 0 0 1-1.26-4.39c0-4.54 3.7-8.23 8.24-8.23 4.54 0 8.23 3.69 8.23 8.23 0 4.54-3.69 8.24-8.23 8.24m4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.42-.14 0-.31-.02-.48-.02s-.43.06-.66.31c-.23.25-.87.85-.87 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29"/></svg>
+              Connect On WhatsApp
+            </a>
+          </div>
+        </div>
+
+        <!-- right CTA -->
+        <div class="rounded-2xl bg-[#FCF8EF] ring-1 ring-[#EADFC6] px-6 py-10 text-center shadow-[0_8px_24px_rgba(150,110,40,0.1)]">
+          <h3 class="font-head text-2xl sm:text-[28px] text-[#8a6a2f]">Learn Astrology, Vastu, IPS, Tarot</h3>
+          <p class="text-[#5E554C] text-sm mt-4">LIVE Sessions- Online Classes</p>
+          <div class="mt-7 flex justify-center">
+            <a href="#" class="btn inline-flex items-center gap-2 rounded-full bg-gradient-to-b from-[#F3D488] to-[#C8953D] hover:to-[#A9762C] text-[#241a0f] font-semibold text-sm px-6 py-3 shadow-lg ring-1 ring-[#F3D488]/60 transition-colors">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2m0 18.1c-1.53 0-3.03-.41-4.34-1.19l-.31-.18-3.11.82.83-3.03-.2-.32a8.2 8.2 0 0 1-1.26-4.39c0-4.54 3.7-8.23 8.24-8.23 4.54 0 8.23 3.69 8.23 8.23 0 4.54-3.69 8.24-8.23 8.24m4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.42-.14 0-.31-.02-.48-.02s-.43.06-.66.31c-.23.25-.87.85-.87 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29"/></svg>
+              Connect On WhatsApp
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- carousel dots -->
+    <div class="flex items-center justify-center gap-3 mt-8">
+      <span class="sep-dot h-2.5 w-2.5 rounded-full bg-[#D9C39A]"></span>
+      <span class="sep-dot h-2.5 w-2.5 rounded-full bg-[#D9C39A]"></span>
+      <span class="sep-dot h-4 w-4 rounded-full bg-[#C8953D] shadow-[0_0_12px_rgba(201,149,61,0.7)]"></span>
+      <span class="sep-dot h-2.5 w-2.5 rounded-full bg-[#D9C39A]"></span>
+      <span class="sep-dot h-2.5 w-2.5 rounded-full bg-[#D9C39A]"></span>
+      <span class="sep-dot h-2.5 w-2.5 rounded-full bg-[#D9C39A]"></span>
+    </div>
+  </section>
+
+  <script>
+    // Navbar expand / shrink — click anywhere on the bar
+    const navbar = document.getElementById('navbar');
+    const extraWrap = document.getElementById('nav-extra-wrap');
+    let expanded = true;
+    // Measure natural width of the collapsible group
+    let fullWidth = extraWrap.scrollWidth;
+    extraWrap.style.width = fullWidth + 'px';
+    window.addEventListener('resize', () => {
+      if (expanded) {
+        extraWrap.style.width = 'auto';
+        fullWidth = extraWrap.scrollWidth;
+        extraWrap.style.width = fullWidth + 'px';
+      }
+    });
+    // Smooth manual tween (sets px width each frame — reliable inside flexbox)
+    let tween = null;
+    function animateWidth(from, to, duration) {
+      if (tween) clearInterval(tween);
+      const start = Date.now();
+      tween = setInterval(() => {
+        const p = Math.min((Date.now() - start) / duration, 1);
+        const e = 1 - Math.pow(1 - p, 3);          // ease-out
+        const w = from + (to - from) * e;
+        extraWrap.style.width = w + 'px';
+        extraWrap.style.opacity = String(to > from ? e : 1 - e);
+        if (p >= 1) {
+          clearInterval(tween);
+          tween = null;
+          extraWrap.style.width = to + 'px';
+        }
+      }, 16);
+    }
+    // Click anywhere on the bar toggles expand / shrink
+    navbar.addEventListener('click', () => {
+      expanded = !expanded;
+      const from = extraWrap.getBoundingClientRect().width;
+      animateWidth(from, expanded ? fullWidth : 0, 780);
+    });
+    // Links navigate normally without toggling the bar
+    document.querySelectorAll('#navbar .nav-item').forEach((a) =>
+      a.addEventListener('click', (e) => e.stopPropagation())
+    );
+
+    // Animated counters — count up from 0 when scrolled into view
+    function runCounter(el) {
+      const target = parseFloat(el.dataset.value);
+      const suffix = el.dataset.suffix || '';
+      const duration = 2400, stepMs = 16;
+      const start = Date.now();
+      const timer = setInterval(() => {
+        const p = Math.min((Date.now() - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3); // ease-out
+        el.textContent = Math.round(eased * target) + (p === 1 ? suffix : '');
+        if (p >= 1) clearInterval(timer);
+      }, stepMs);
+    }
+    const counters = [...document.querySelectorAll('.counter')];
+    function checkCounters() {
+      for (let i = counters.length - 1; i >= 0; i--) {
+        const c = counters[i];
+        const r = c.getBoundingClientRect();
+        if (r.top < window.innerHeight * 0.9 && r.bottom > 0) {
+          runCounter(c);
+          counters.splice(i, 1); // run once
+        }
+      }
+      if (counters.length === 0) window.removeEventListener('scroll', checkCounters);
+    }
+    window.addEventListener('scroll', checkCounters, { passive: true });
+    window.addEventListener('load', checkCounters);
+    checkCounters();
+
+    // ===== Handwritten signature — type in letter by letter (no cursor) =====
+    (function typeSignature() {
+      const el = document.getElementById('handwrite');
+      if (!el) return;
+      const full = el.dataset.text || '';
+      let i = 0;
+      function step() {
+        if (i > full.length) return;
+        const shown = full.slice(0, i).replace('|', '<br>');
+        el.innerHTML = shown;
+        i++;
+        if (i <= full.length) setTimeout(step, 135); // slow, premium pacing
+      }
+      setTimeout(step, 1100);
+    })();
+
+    // ===== Hero parallax fade — image + card recede & fade on scroll =====
+    const heroSection = document.querySelector('section');
+    const heroBg = document.querySelector('.hero-bg');
+    const heroCard = document.querySelector('.hero-card');
+    function heroParallax() {
+      const h = heroSection.offsetHeight || 1;
+      const y = window.scrollY;
+      const p = Math.min(y / h, 1);                 // 0 → 1 across the hero
+      // whole hero gradually lifts upward + fades to reveal the next section
+      heroBg.style.opacity = String(1 - p * 0.9);
+      heroBg.style.transform = 'translateY(' + (-y * 0.28) + 'px) scale(' + (1 - p * 0.05) + ')';
+      // text card lifts a bit faster + fades
+      heroCard.style.opacity = String(Math.max(0, 1 - p * 1.2));
+      heroCard.style.transform = 'translateY(' + (-y * 0.45) + 'px)';
+    }
+    window.addEventListener('scroll', heroParallax, { passive: true });
+
+    // ===== Staggered scroll-reveal (Explore panel + service cards, etc.) =====
+    const reveals = [...document.querySelectorAll('.reveal-up, .reveal-down, .reveal-left, .reveal-right, .reveal-back')];
+    // Stagger the service cards ONLY when they share a row (wide screens).
+    // On stacked/narrow layouts each card scrolls in on its own, so no delay.
+    const gridCards = [...document.querySelectorAll('.grid .reveal-up, .grid .reveal-down')];
+    function applyStagger() {
+      const inOneRow = gridCards.length > 1 &&
+        Math.abs(gridCards[0].getBoundingClientRect().top - gridCards[1].getBoundingClientRect().top) < 10;
+      gridCards.forEach((el, i) => {
+        el.style.transitionDelay = inOneRow ? (i * 130) + 'ms' : '0ms';
+      });
+    }
+    applyStagger();
+    window.addEventListener('resize', applyStagger);
+    // Re-trigger every time an element enters/leaves the viewport
+    function checkReveals() {
+      const vh = window.innerHeight;
+      reveals.forEach((el) => {
+        const r = el.getBoundingClientRect();
+        const inView = r.top < vh * 0.88 && r.bottom > vh * 0.06;
+        el.classList.toggle('in', inView);
+      });
+    }
+    window.addEventListener('scroll', checkReveals, { passive: true });
+    window.addEventListener('load', checkReveals);
+    checkReveals();
+  </script>
+</body>
+</html>
