@@ -144,23 +144,12 @@
     .reveal-down  { transform: translateY(-80px); }
     .reveal-left  { transform: translateX(-120px); }
     .reveal-right { transform: translateX(120px);  }
-    .reveal-back  { transform: translateY(60px) scale(.92); }
+    /* Explore panel — grows in from the centre (zoom-in) like the reference video */
+    .reveal-back  { transform: scale(.5); transform-origin: center center; }
     .reveal-up.in, .reveal-down.in, .reveal-left.in, .reveal-right.in, .reveal-back.in {
       opacity: 1;
       transform: none;
     }
-
-    /* ===== Scroll reveal system ===== */
-    .reveal {
-      opacity: 0;
-      transition: opacity 850ms cubic-bezier(.22,1,.36,1),
-                  transform 850ms cubic-bezier(.22,1,.36,1);
-      will-change: opacity, transform;
-    }
-    .reveal-top    { transform: translateY(-80px); }
-    .reveal-bottom { transform: translateY(80px); }
-    .reveal-back   { transform: scale(.88); }
-    .reveal.in     { opacity: 1; transform: none; }
 
     /* ===== Buttons: shadow + hover animation ===== */
     .btn {
