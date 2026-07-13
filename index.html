@@ -330,8 +330,8 @@
         <div id="nav-extra-wrap" class="nav-extra-wrap">
           <div class="nav-extra-inner">
             <a href="#" class="nav-item">Media</a>
-            <a href="#" class="nav-item">STI Workshop</a>
             <a href="#" class="nav-item">Articles</a>
+            <a href="#" class="nav-item">STI Workshop</a>
             <a href="#" class="nav-item">Contact</a>
           </div>
         </div>
@@ -588,19 +588,18 @@
   </section>
 
   <script>
-    // Navbar expand / shrink — click anywhere on the bar
+    // Navbar auto expand / shrink on HOVER (mouse enter = expand, leave = shrink)
     const navbar = document.getElementById('navbar');
     const extraWrap = document.getElementById('nav-extra-wrap');
-    let expanded = true;
-    // Measure natural width of the collapsible group
+    let expanded = false;                 // starts shrunk (first 4 items)
+    // Measure natural width, then collapse to 0
     let fullWidth = extraWrap.scrollWidth;
-    extraWrap.style.width = fullWidth + 'px';
+    extraWrap.style.width = '0px';
+    extraWrap.style.opacity = '0';
     window.addEventListener('resize', () => {
-      if (expanded) {
-        extraWrap.style.width = 'auto';
-        fullWidth = extraWrap.scrollWidth;
-        extraWrap.style.width = fullWidth + 'px';
-      }
+      extraWrap.style.width = 'auto';
+      fullWidth = extraWrap.scrollWidth;
+      extraWrap.style.width = expanded ? fullWidth + 'px' : '0px';
     });
     // Smooth manual tween (sets px width each frame — reliable inside flexbox)
     let tween = null;
@@ -620,11 +619,16 @@
         }
       }, 16);
     }
-    // Click anywhere on the bar toggles expand / shrink
-    navbar.addEventListener('click', () => {
-      expanded = !expanded;
-      const from = extraWrap.getBoundingClientRect().width;
-      animateWidth(from, expanded ? fullWidth : 0, 780);
+    // Auto-expand on hover, auto-shrink when the mouse leaves
+    navbar.addEventListener('mouseenter', () => {
+      if (expanded) return;
+      expanded = true;
+      animateWidth(extraWrap.getBoundingClientRect().width, fullWidth, 620);
+    });
+    navbar.addEventListener('mouseleave', () => {
+      if (!expanded) return;
+      expanded = false;
+      animateWidth(extraWrap.getBoundingClientRect().width, 0, 620);
     });
     // Links navigate normally without toggling the bar
     document.querySelectorAll('#navbar .nav-item').forEach((a) =>
