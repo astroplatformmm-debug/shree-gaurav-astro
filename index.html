@@ -8,6 +8,8 @@
   <meta http-equiv="Expires" content="0" />
   <title>Shree Gaurav Astro</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Lato:wght@400;500;600;700&family=Caveat:wght@500;600&family=Gochi+Hand&display=swap" rel="stylesheet" />
@@ -119,20 +121,10 @@
       background-size: cover;
       background-position: center;
       box-shadow: 0 20px 60px rgba(0,0,0,0.35);
-      animation: heroDrop 2400ms cubic-bezier(.22,1,.36,1) backwards;
+      /* intro + scroll motion handled by GSAP (see script) */
+      will-change: transform, opacity;
     }
-    @keyframes heroDrop {
-      from { opacity: 0; transform: translateY(-80px) scale(1.05); }
-      to   { opacity: 1; transform: translateY(0)     scale(1);    }
-    }
-    .hero-card {
-      animation: heroSlideRight 2200ms cubic-bezier(.22,1,.36,1) backwards;
-      animation-delay: 700ms;
-    }
-    @keyframes heroSlideRight {
-      from { opacity: 0; transform: translateX(100px); }
-      to   { opacity: 1; transform: translateX(0);     }
-    }
+    .hero-card { will-change: transform, opacity; }
 
     /* ===== Scroll-reveal (staggered) ===== */
     .reveal-up, .reveal-down, .reveal-left, .reveal-right, .reveal-back {
@@ -190,6 +182,19 @@
     }
     .svc-img { transition: transform 750ms cubic-bezier(.22,1,.36,1); }
     .svc-card:hover .svc-img { transform: scale(1.09); }
+
+    /* Explore becomes a full-viewport overlay while the hero is pinned (GSAP) */
+    .as-overlay {
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 30 !important;
+      margin: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      overflow-y: auto !important;
+    }
+    /* while overlaid, let GSAP fully own card transforms (no CSS transition fight) */
+    .as-overlay .svc-card { transition: none !important; }
 
     /* Stat boxes — hover lift + gold glow */
     .stat-box {
@@ -309,7 +314,7 @@
 <body class="bg-[#FDFCF9]">
 
   <!-- ===== HERO ===== -->
-  <section
+  <section id="hero"
     class="relative w-full overflow-hidden min-h-screen flex flex-col"
     style="background-color:#3a2a12;">
 
@@ -370,8 +375,8 @@
   </section>
 
   <!-- ===== EXPLORE SERVICES ===== -->
-  <section class="w-full bg-[#FDFCF9] pt-6 pb-10 px-4">
-    <div class="reveal-back mx-auto max-w-[1480px] rounded-[32px] bg-[#F7F2E9] ring-1 ring-[#E6D8C3] px-6 sm:px-12 py-12 sm:py-16 shadow-lg">
+  <section id="explore" class="w-full bg-[#FDFCF9] pt-6 pb-10 px-4">
+    <div id="explore-panel" class="mx-auto max-w-[1480px] rounded-[32px] bg-[#F7F2E9] ring-1 ring-[#E6D8C3] px-6 sm:px-12 py-12 sm:py-16 shadow-lg">
 
       <!-- Heading -->
       <h2 class="font-head text-center text-4xl sm:text-5xl text-[#1F1B17]">Explore Services</h2>
@@ -385,7 +390,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
         <!-- Card -->
-        <div class="reveal-down svc-card rounded-2xl bg-[#FDFCF9] ring-1 ring-[#EADFC6] p-4 shadow-sm">
+        <div class="svc-card rounded-2xl bg-[#FDFCF9] ring-1 ring-[#EADFC6] p-4 shadow-sm">
           <div class="h-40 w-full rounded-xl overflow-hidden bg-[#EADFC6]">
             <img src="service-astrology.png" alt="Astrology Consultation" class="svc-img h-full w-full object-cover" onerror="this.style.display='none'" />
           </div>
@@ -395,7 +400,7 @@
         </div>
 
         <!-- Card -->
-        <div class="reveal-up svc-card rounded-2xl bg-[#FDFCF9] ring-1 ring-[#EADFC6] p-4 shadow-sm">
+        <div class="svc-card rounded-2xl bg-[#FDFCF9] ring-1 ring-[#EADFC6] p-4 shadow-sm">
           <div class="h-40 w-full rounded-xl overflow-hidden bg-[#EADFC6]">
             <img src="service-vastu.png" alt="Vastu Consultation" class="svc-img h-full w-full object-cover" onerror="this.style.display='none'" />
           </div>
@@ -405,7 +410,7 @@
         </div>
 
         <!-- Card -->
-        <div class="reveal-down svc-card rounded-2xl bg-[#FDFCF9] ring-1 ring-[#EADFC6] p-4 shadow-sm">
+        <div class="svc-card rounded-2xl bg-[#FDFCF9] ring-1 ring-[#EADFC6] p-4 shadow-sm">
           <div class="h-40 w-full rounded-xl overflow-hidden bg-[#EADFC6]">
             <img src="service-courses.jpeg" alt="Live Courses" class="svc-img h-full w-full object-cover" onerror="this.style.display='none'" />
           </div>
@@ -415,7 +420,7 @@
         </div>
 
         <!-- Card -->
-        <div class="reveal-up svc-card rounded-2xl bg-[#FDFCF9] ring-1 ring-[#EADFC6] p-4 shadow-sm">
+        <div class="svc-card rounded-2xl bg-[#FDFCF9] ring-1 ring-[#EADFC6] p-4 shadow-sm">
           <div class="h-40 w-full rounded-xl overflow-hidden bg-[#EADFC6]">
             <img src="service-meditation.png" alt="Meditation" class="svc-img h-full w-full object-cover" onerror="this.style.display='none'" />
           </div>
@@ -681,24 +686,9 @@
       setTimeout(step, 1100);
     })();
 
-    // ===== Hero parallax fade — image + card recede & fade on scroll =====
-    const heroSection = document.querySelector('section');
-    const heroBg = document.querySelector('.hero-bg');
-    const heroCard = document.querySelector('.hero-card');
-    function heroParallax() {
-      const h = heroSection.offsetHeight || 1;
-      const y = window.scrollY;
-      const p = Math.min(y / h, 1);                 // 0 → 1 across the hero
-      // whole hero gradually lifts upward + fades to reveal the next section
-      heroBg.style.opacity = String(1 - p * 0.9);
-      heroBg.style.transform = 'translateY(' + (-y * 0.28) + 'px) scale(' + (1 - p * 0.05) + ')';
-      // text card lifts a bit faster + fades
-      heroCard.style.opacity = String(Math.max(0, 1 - p * 1.2));
-      heroCard.style.transform = 'translateY(' + (-y * 0.45) + 'px)';
-    }
-    window.addEventListener('scroll', heroParallax, { passive: true });
+    // Hero intro + hero→explore scroll transition are handled by GSAP (bottom of file).
 
-    // ===== Staggered scroll-reveal (Explore panel + service cards, etc.) =====
+    // ===== Staggered scroll-reveal (other sections: IPS, Trusted, Glance, WhatsApp) =====
     const reveals = [...document.querySelectorAll('.reveal-up, .reveal-down, .reveal-left, .reveal-right, .reveal-back')];
     // Stagger the service cards ONLY when they share a row (wide screens).
     // On stacked/narrow layouts each card scrolls in on its own, so no delay.
@@ -724,6 +714,100 @@
     window.addEventListener('scroll', checkReveals, { passive: true });
     window.addEventListener('load', checkReveals);
     checkReveals();
+
+    /* =========================================================
+       GSAP — Hero intro + pinned Hero→Explore cinematic transition
+       (only animation logic; DOM / design untouched)
+       ========================================================= */
+    (function () {
+      if (!window.gsap || !window.ScrollTrigger) return;
+      gsap.registerPlugin(ScrollTrigger);
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const hero     = document.getElementById('hero');
+      const heroBg   = document.querySelector('.hero-bg');
+      const heroCard = document.querySelector('.hero-card');
+      const headLines= heroCard.querySelectorAll('h1 > span');       // 3 heading lines
+      const paras    = heroCard.querySelectorAll('p');
+      const subtitle = paras[0];
+      const quote    = paras[1];
+      const ctaWrap  = heroCard.querySelector('a').parentElement;
+      const explore  = document.getElementById('explore');
+      const cards    = gsap.utils.toArray('#explore .svc-card');     // [astrology,vastu,courses,meditation]
+
+      gsap.set([heroBg, heroCard, explore, ...cards], { force3D: true });
+
+      const lockScroll = () => {
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
+        window.scrollTo(0, 0);
+      };
+      const unlockScroll = () => {
+        document.documentElement.style.overflow = '';
+        document.body.style.overflow = '';
+        ScrollTrigger.refresh();
+      };
+
+      /* ---------- initial states ---------- */
+      gsap.set(heroBg,    { yPercent: -20, opacity: 0, scale: 1.05 });
+      gsap.set(heroCard,  { opacity: 0, scale: 0.9 });
+      gsap.set(headLines, { opacity: 0, y: 26 });
+      gsap.set([subtitle, quote], { opacity: 0, y: 18 });
+      gsap.set(ctaWrap,   { opacity: 0, y: 16 });
+
+      const revealAll = () => gsap.set([heroBg, heroCard, headLines, subtitle, quote, ctaWrap], { clearProps: 'all' });
+
+      if (reduce) {
+        revealAll();
+      } else {
+        /* ---------- INTRO (scroll locked) ---------- */
+        lockScroll();
+        // Safety: never leave the user stuck with locked scroll / hidden hero
+        const safety = setTimeout(() => { revealAll(); unlockScroll(); }, 6000);
+        gsap.timeline({ defaults: { ease: 'power3.out' }, onComplete: () => { clearTimeout(safety); unlockScroll(); } })
+          .to(heroBg,    { yPercent: 0, opacity: 1, scale: 1, duration: 1.25 })            // 1. bg slides down
+          .to(heroCard,  { opacity: 1, scale: 1, duration: 0.9 }, '-=0.55')                // 2. glass box fade+scale
+          .to(headLines, { opacity: 1, y: 0, duration: 0.7, stagger: 0.16 }, '-=0.4')      // 3. heading line by line
+          .to(subtitle,  { opacity: 1, y: 0, duration: 0.6 }, '-=0.35')                    // 4. subtitle fades up
+          .to(quote,     { opacity: 1, y: 0, duration: 0.5 }, '-=0.4')
+          .to(ctaWrap,   { opacity: 1, y: 0, duration: 0.6 }, '-=0.3');                    // 5. CTA last
+      }
+
+      /* ---------- PINNED HERO → EXPLORE ---------- */
+      gsap.set(explore, { opacity: 0 });
+
+      // toggle Explore into a full-viewport overlay only while the hero is pinned,
+      // so it "replaces" the hero in the same viewport (no come-from-below, no jump)
+      const setOverlay = (on) => explore.classList.toggle('as-overlay', on);
+
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: hero,
+          start: 'top top',
+          end: '+=1900',
+          pin: true,
+          pinSpacing: true,
+          scrub: 1,
+          anticipatePin: 1,
+          onEnter:     () => setOverlay(true),
+          onEnterBack: () => setOverlay(true),
+          onLeave:     () => setOverlay(false),
+          onLeaveBack: () => setOverlay(false)
+        }
+      });
+
+      tl
+        /* hero exits: content fades, bg scales down + lifts up + disappears */
+        .to(heroCard, { opacity: 0, y: -60, scale: 0.96, ease: 'none' }, 0)
+        .to(heroBg,   { scale: 0.9, yPercent: -18, opacity: 0, ease: 'none' }, 0)
+        /* Explore background fades in over the same viewport */
+        .to(explore,  { opacity: 1, ease: 'none', duration: 0.4 }, 0.12)
+        /* cards — exact requested order, overlapping */
+        .fromTo(cards[1], { opacity: 0, yPercent: -140 }, { opacity: 1, yPercent: 0, ease: 'power3.out', duration: 0.55 }, 0.42) // 1. main from TOP
+        .fromTo(cards[2], { opacity: 0, yPercent:  140 }, { opacity: 1, yPercent: 0, ease: 'power3.out', duration: 0.55 }, 0.58) // 2. from BOTTOM
+        .fromTo(cards[0], { opacity: 0, xPercent: -140 }, { opacity: 1, xPercent: 0, ease: 'power3.out', duration: 0.55 }, 0.76) // 3. from LEFT
+        .fromTo(cards[3], { opacity: 0, xPercent:  140 }, { opacity: 1, xPercent: 0, ease: 'power3.out', duration: 0.55 }, 0.9); // 4. from RIGHT
+    })();
   </script>
 </body>
 </html>
