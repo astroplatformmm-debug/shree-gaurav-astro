@@ -727,13 +727,16 @@
       const hero     = document.getElementById('hero');
       const heroBg   = document.querySelector('.hero-bg');
       const heroCard = document.querySelector('.hero-card');
-      const headLines= heroCard.querySelectorAll('h1 > span');       // 3 heading lines
+      const heading  = heroCard.querySelector('h1');                 // animate as ONE block (no layout change)
       const paras    = heroCard.querySelectorAll('p');
       const subtitle = paras[0];
       const quote    = paras[1];
       const ctaWrap  = heroCard.querySelector('a').parentElement;
       const explore  = document.getElementById('explore');
       const cards    = gsap.utils.toArray('#explore .svc-card');     // [astrology,vastu,courses,meditation]
+
+      // elements whose transforms must be fully wiped once the intro settles
+      const heroContent = [heroBg, heroCard, heading, subtitle, quote, ctaWrap];
 
       gsap.set([heroBg, heroCard, explore, ...cards], { force3D: true });
 
@@ -748,23 +751,18 @@
         ScrollTrigger.refresh();
       };
 
-      const grid = document.querySelector('#explore .grid');
+      /* ---------- initial states — transform + opacity ONLY, per-element perspective
+         (no parent/layout changes; transformOrigin left at default centre) ---------- */
+      gsap.set(heroBg,   { yPercent: -26, opacity: 0, scale: 1.08, filter: 'blur(16px)' });
+      gsap.set(heroCard, { opacity: 0, y: 48, scale: 0.9, rotationX: 10, transformPerspective: 900, filter: 'blur(10px)' });
+      gsap.set(heading,  { opacity: 0, y: 30, filter: 'blur(6px)' });
+      gsap.set(subtitle, { opacity: 0, y: 28, filter: 'blur(5px)' });
+      gsap.set(quote,    { opacity: 0, y: 24, filter: 'blur(5px)' });
+      gsap.set(ctaWrap,  { opacity: 0, y: 22, scale: 0.85 });
 
-      /* ---------- depth setup (perspective + GPU hints) ---------- */
-      gsap.set(hero,     { perspective: 1200 });
-      gsap.set(grid,     { perspective: 1100 });
-      gsap.set(headLines,{ display: 'inline-block', transformOrigin: '50% 100%' });
-      gsap.set([...cards], { willChange: 'transform, filter, opacity' });
-
-      /* ---------- initial states (layered depth: y + scale + rotationX + blur) ---------- */
-      gsap.set(heroBg,    { yPercent: -26, opacity: 0, scale: 1.08, filter: 'blur(16px)', transformOrigin: '50% 42%' });
-      gsap.set(heroCard,  { opacity: 0, y: 48, scale: 0.9, rotationX: 10, filter: 'blur(10px)', transformOrigin: '50% 120%' });
-      gsap.set(headLines, { opacity: 0, yPercent: 70, rotationX: 34, filter: 'blur(6px)' });
-      gsap.set(subtitle,  { opacity: 0, y: 28, filter: 'blur(5px)' });
-      gsap.set(quote,     { opacity: 0, y: 24, filter: 'blur(5px)' });
-      gsap.set(ctaWrap,   { opacity: 0, y: 22, scale: 0.85 });
-
-      const revealAll = () => gsap.set([heroBg, heroCard, headLines, subtitle, quote, ctaWrap], { clearProps: 'all' });
+      // Wipe ALL transforms/filters once the intro is done → content sits in its exact
+      // original centered (flex) position with no leftover translate/scale/rotate.
+      const revealAll = () => gsap.set(heroContent, { clearProps: 'transform,filter,opacity,willChange' });
 
       if (reduce) {
         revealAll();
@@ -774,10 +772,12 @@
            Absolute time cues (not '+=') so the whole thing reads as ONE move. */
         lockScroll();
         const safety = setTimeout(() => { revealAll(); unlockScroll(); }, 6500);
-        gsap.timeline({ defaults: { ease: 'expo.out' }, onComplete: () => { clearTimeout(safety); unlockScroll(); } })
+        // onComplete: unlock AND wipe every transform so the hero content returns to
+        // its exact original centered layout (no leftover translate/scale/rotate).
+        gsap.timeline({ defaults: { ease: 'expo.out' }, onComplete: () => { clearTimeout(safety); revealAll(); unlockScroll(); } })
           .to(heroBg,    { yPercent: 0, opacity: 1, scale: 1, filter: 'blur(0px)', duration: 1.7 }, 0.00)
           .to(heroCard,  { opacity: 1, y: 0, scale: 1, rotationX: 0, filter: 'blur(0px)', duration: 1.4, ease: 'power4.out' }, 0.38)  // begins while bg still moving
-          .to(headLines, { opacity: 1, yPercent: 0, rotationX: 0, filter: 'blur(0px)', duration: 1.05, ease: 'power4.out', stagger: 0.13 }, 0.72) // before card settles
+          .to(heading,   { opacity: 1, y: 0, filter: 'blur(0px)', duration: 1.05, ease: 'power4.out' }, 0.72)                          // before card settles
           .to(subtitle,  { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.95, ease: 'power3.out' }, 1.06)                          // before heading settles
           .to(quote,     { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.85, ease: 'power3.out' }, 1.24)
           .to(ctaWrap,   { opacity: 1, y: 0, scale: 1, duration: 0.95, ease: 'power4.out' }, 1.38);                                     // before subtitle settles
@@ -816,14 +816,15 @@
         .to(heroCard, { opacity: 0, y: -46, scale: 0.94, rotationX: -6, filter: 'blur(8px)', ease: 'power3.inOut', duration: 0.44 }, 0.05)
         /* hero background recedes slower + blurs (parallax rate 2 = depth) */
         .to(heroBg,   { opacity: 0, yPercent: -15, scale: 0.9, filter: 'blur(11px)', ease: 'power3.inOut', duration: 0.52 }, 0.02)
-        /* cards cascade — heavily overlapping, gentle depth, NO pop / NO bounce (expo.out) */
-        .fromTo(cards[1], { opacity: 0, yPercent: -95, scale: 0.94, rotationX:  12, filter: 'blur(6px)' },
+        /* cards cascade — heavily overlapping, gentle depth, NO pop / NO bounce (expo.out).
+           Per-element perspective (no parent/grid change); transforms wiped once settled. */
+        .fromTo(cards[1], { opacity: 0, yPercent: -95, scale: 0.94, rotationX:  12, transformPerspective: 1000, filter: 'blur(6px)' },
                           { opacity: 1, yPercent: 0, scale: 1, rotationX: 0, filter: 'blur(0px)', ease: 'expo.out', duration: 0.95 }, 0.40) // centre from TOP
-        .fromTo(cards[2], { opacity: 0, yPercent:  95, scale: 0.94, rotationX: -12, filter: 'blur(6px)' },
+        .fromTo(cards[2], { opacity: 0, yPercent:  95, scale: 0.94, rotationX: -12, transformPerspective: 1000, filter: 'blur(6px)' },
                           { opacity: 1, yPercent: 0, scale: 1, rotationX: 0, filter: 'blur(0px)', ease: 'expo.out', duration: 0.95 }, 0.55) // bottom card
-        .fromTo(cards[0], { opacity: 0, xPercent: -95, scale: 0.94, rotationY:  14, filter: 'blur(6px)' },
+        .fromTo(cards[0], { opacity: 0, xPercent: -95, scale: 0.94, rotationY:  14, transformPerspective: 1000, filter: 'blur(6px)' },
                           { opacity: 1, xPercent: 0, scale: 1, rotationY: 0, filter: 'blur(0px)', ease: 'expo.out', duration: 0.95 }, 0.70) // from LEFT
-        .fromTo(cards[3], { opacity: 0, xPercent:  95, scale: 0.94, rotationY: -14, filter: 'blur(6px)' },
+        .fromTo(cards[3], { opacity: 0, xPercent:  95, scale: 0.94, rotationY: -14, transformPerspective: 1000, filter: 'blur(6px)' },
                           { opacity: 1, xPercent: 0, scale: 1, rotationY: 0, filter: 'blur(0px)', ease: 'expo.out', duration: 0.95 }, 0.82); // from RIGHT
     })();
   </script>
