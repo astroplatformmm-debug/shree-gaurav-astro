@@ -773,40 +773,44 @@
           .to(ctaWrap,   { opacity: 1, y: 0, duration: 0.6 }, '-=0.3');                    // 5. CTA last
       }
 
-      /* ---------- PINNED HERO → EXPLORE ---------- */
+      /* ---------- PINNED HERO ⇄ EXPLORE (cinematic morph, one viewport) ---------- */
+      // Explore starts hidden + overlaid on the SAME viewport as the pinned hero.
+      // Pre-hide the cards so they never flash before their entrance.
       gsap.set(explore, { opacity: 0 });
+      gsap.set(cards,   { opacity: 0 });
 
-      // toggle Explore into a full-viewport overlay only while the hero is pinned,
-      // so it "replaces" the hero in the same viewport (no come-from-below, no jump)
+      // While the hero is pinned, Explore is a full-viewport overlay (fixed, inset:0)
+      // so it occupies the exact same viewport — no "next section", no page jump.
       const setOverlay = (on) => explore.classList.toggle('as-overlay', on);
 
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: hero,
           start: 'top top',
-          end: '+=1900',
-          pin: true,
+          end: '+=1600',
+          pin: true,                 // hero stays visually fixed — viewport does not move
           pinSpacing: true,
           scrub: 1,
           anticipatePin: 1,
+          invalidateOnRefresh: true,
           onEnter:     () => setOverlay(true),
           onEnterBack: () => setOverlay(true),
-          onLeave:     () => setOverlay(false),
+          onLeave:     () => setOverlay(false),   // hand off to the real (identical) section, already at viewport top
           onLeaveBack: () => setOverlay(false)
         }
       });
 
       tl
-        /* hero exits: content fades, bg scales down + lifts up + disappears */
-        .to(heroCard, { opacity: 0, y: -60, scale: 0.96, ease: 'none' }, 0)
-        .to(heroBg,   { scale: 0.9, yPercent: -18, opacity: 0, ease: 'none' }, 0)
-        /* Explore background fades in over the same viewport */
-        .to(explore,  { opacity: 1, ease: 'none', duration: 0.4 }, 0.12)
-        /* cards — exact requested order, overlapping */
-        .fromTo(cards[1], { opacity: 0, yPercent: -140 }, { opacity: 1, yPercent: 0, ease: 'power3.out', duration: 0.55 }, 0.42) // 1. main from TOP
-        .fromTo(cards[2], { opacity: 0, yPercent:  140 }, { opacity: 1, yPercent: 0, ease: 'power3.out', duration: 0.55 }, 0.58) // 2. from BOTTOM
-        .fromTo(cards[0], { opacity: 0, xPercent: -140 }, { opacity: 1, xPercent: 0, ease: 'power3.out', duration: 0.55 }, 0.76) // 3. from LEFT
-        .fromTo(cards[3], { opacity: 0, xPercent:  140 }, { opacity: 1, xPercent: 0, ease: 'power3.out', duration: 0.55 }, 0.9); // 4. from RIGHT
+        /* Phase 1 — CROSSFADE in place: Explore fades in (opaque) BEFORE the hero
+           finishes leaving, so the viewport is never empty (no whitespace).      */
+        .to(explore,  { opacity: 1, ease: 'power1.inOut', duration: 0.42 }, 0.0)
+        .to(heroCard, { opacity: 0, y: -18, ease: 'power1.in', duration: 0.38 }, 0.02)
+        .to(heroBg,   { opacity: 0, yPercent: -10, scale: 0.96, ease: 'power1.in', duration: 0.42 }, 0.06)
+        /* Phase 2 — cards animate ONLY after Explore bg is fully visible, exact order */
+        .fromTo(cards[1], { opacity: 0, yPercent: -150 }, { opacity: 1, yPercent: 0, ease: 'power3.out', duration: 0.5 }, 0.5)  // 1. centre from TOP
+        .fromTo(cards[2], { opacity: 0, yPercent:  150 }, { opacity: 1, yPercent: 0, ease: 'power3.out', duration: 0.5 }, 0.62) // 2. third from BOTTOM
+        .fromTo(cards[0], { opacity: 0, xPercent: -150 }, { opacity: 1, xPercent: 0, ease: 'power3.out', duration: 0.5 }, 0.76) // 3. from LEFT
+        .fromTo(cards[3], { opacity: 0, xPercent:  150 }, { opacity: 1, xPercent: 0, ease: 'power3.out', duration: 0.5 }, 0.88);// 4. from RIGHT
     })();
   </script>
 </body>
