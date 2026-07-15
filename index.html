@@ -748,69 +748,83 @@
         ScrollTrigger.refresh();
       };
 
-      /* ---------- initial states ---------- */
-      gsap.set(heroBg,    { yPercent: -20, opacity: 0, scale: 1.05 });
-      gsap.set(heroCard,  { opacity: 0, scale: 0.9 });
-      gsap.set(headLines, { opacity: 0, y: 26 });
-      gsap.set([subtitle, quote], { opacity: 0, y: 18 });
-      gsap.set(ctaWrap,   { opacity: 0, y: 16 });
+      const grid = document.querySelector('#explore .grid');
+
+      /* ---------- depth setup (perspective + GPU hints) ---------- */
+      gsap.set(hero,     { perspective: 1200 });
+      gsap.set(grid,     { perspective: 1100 });
+      gsap.set(headLines,{ display: 'inline-block', transformOrigin: '50% 100%' });
+      gsap.set([...cards], { willChange: 'transform, filter, opacity' });
+
+      /* ---------- initial states (layered depth: y + scale + rotationX + blur) ---------- */
+      gsap.set(heroBg,    { yPercent: -26, opacity: 0, scale: 1.08, filter: 'blur(16px)', transformOrigin: '50% 42%' });
+      gsap.set(heroCard,  { opacity: 0, y: 48, scale: 0.9, rotationX: 10, filter: 'blur(10px)', transformOrigin: '50% 120%' });
+      gsap.set(headLines, { opacity: 0, yPercent: 70, rotationX: 34, filter: 'blur(6px)' });
+      gsap.set(subtitle,  { opacity: 0, y: 28, filter: 'blur(5px)' });
+      gsap.set(quote,     { opacity: 0, y: 24, filter: 'blur(5px)' });
+      gsap.set(ctaWrap,   { opacity: 0, y: 22, scale: 0.85 });
 
       const revealAll = () => gsap.set([heroBg, heroCard, headLines, subtitle, quote, ctaWrap], { clearProps: 'all' });
 
       if (reduce) {
         revealAll();
       } else {
-        /* ---------- INTRO (scroll locked) ---------- */
+        /* ================= ONE CONTINUOUS INTRO CAMERA =================
+           Every layer overlaps — nothing waits for the previous to end.
+           Absolute time cues (not '+=') so the whole thing reads as ONE move. */
         lockScroll();
-        // Safety: never leave the user stuck with locked scroll / hidden hero
-        const safety = setTimeout(() => { revealAll(); unlockScroll(); }, 6000);
-        gsap.timeline({ defaults: { ease: 'power3.out' }, onComplete: () => { clearTimeout(safety); unlockScroll(); } })
-          .to(heroBg,    { yPercent: 0, opacity: 1, scale: 1, duration: 1.25 })            // 1. bg slides down
-          .to(heroCard,  { opacity: 1, scale: 1, duration: 0.9 }, '-=0.55')                // 2. glass box fade+scale
-          .to(headLines, { opacity: 1, y: 0, duration: 0.7, stagger: 0.16 }, '-=0.4')      // 3. heading line by line
-          .to(subtitle,  { opacity: 1, y: 0, duration: 0.6 }, '-=0.35')                    // 4. subtitle fades up
-          .to(quote,     { opacity: 1, y: 0, duration: 0.5 }, '-=0.4')
-          .to(ctaWrap,   { opacity: 1, y: 0, duration: 0.6 }, '-=0.3');                    // 5. CTA last
+        const safety = setTimeout(() => { revealAll(); unlockScroll(); }, 6500);
+        gsap.timeline({ defaults: { ease: 'expo.out' }, onComplete: () => { clearTimeout(safety); unlockScroll(); } })
+          .to(heroBg,    { yPercent: 0, opacity: 1, scale: 1, filter: 'blur(0px)', duration: 1.7 }, 0.00)
+          .to(heroCard,  { opacity: 1, y: 0, scale: 1, rotationX: 0, filter: 'blur(0px)', duration: 1.4, ease: 'power4.out' }, 0.38)  // begins while bg still moving
+          .to(headLines, { opacity: 1, yPercent: 0, rotationX: 0, filter: 'blur(0px)', duration: 1.05, ease: 'power4.out', stagger: 0.13 }, 0.72) // before card settles
+          .to(subtitle,  { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.95, ease: 'power3.out' }, 1.06)                          // before heading settles
+          .to(quote,     { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.85, ease: 'power3.out' }, 1.24)
+          .to(ctaWrap,   { opacity: 1, y: 0, scale: 1, duration: 0.95, ease: 'power4.out' }, 1.38);                                     // before subtitle settles
       }
 
-      /* ---------- PINNED HERO ⇄ EXPLORE (cinematic morph, one viewport) ---------- */
-      // Explore starts hidden + overlaid on the SAME viewport as the pinned hero.
-      // Pre-hide the cards so they never flash before their entrance.
+      /* ================= PINNED HERO ⇄ EXPLORE — ONE SCRUBBED CAMERA =================
+         The same camera continues: the hero recedes into depth while Explore is
+         pushed in from depth (scale+blur), overlapping into the card cascade.
+         One viewport, no whitespace, no section break. */
       gsap.set(explore, { opacity: 0 });
       gsap.set(cards,   { opacity: 0 });
-
-      // While the hero is pinned, Explore is a full-viewport overlay (fixed, inset:0)
-      // so it occupies the exact same viewport — no "next section", no page jump.
       const setOverlay = (on) => explore.classList.toggle('as-overlay', on);
 
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: hero,
           start: 'top top',
-          end: '+=1600',
-          pin: true,                 // hero stays visually fixed — viewport does not move
+          end: '+=1700',
+          pin: true,
           pinSpacing: true,
-          scrub: 1,
+          scrub: 1.1,                 // inertia — motion decelerates naturally
           anticipatePin: 1,
           invalidateOnRefresh: true,
           onEnter:     () => setOverlay(true),
           onEnterBack: () => setOverlay(true),
-          onLeave:     () => setOverlay(false),   // hand off to the real (identical) section, already at viewport top
+          onLeave:     () => setOverlay(false),
           onLeaveBack: () => setOverlay(false)
         }
       });
 
       tl
-        /* Phase 1 — CROSSFADE in place: Explore fades in (opaque) BEFORE the hero
-           finishes leaving, so the viewport is never empty (no whitespace).      */
-        .to(explore,  { opacity: 1, ease: 'power1.inOut', duration: 0.42 }, 0.0)
-        .to(heroCard, { opacity: 0, y: -18, ease: 'power1.in', duration: 0.38 }, 0.02)
-        .to(heroBg,   { opacity: 0, yPercent: -10, scale: 0.96, ease: 'power1.in', duration: 0.42 }, 0.06)
-        /* Phase 2 — cards animate ONLY after Explore bg is fully visible, exact order */
-        .fromTo(cards[1], { opacity: 0, yPercent: -150 }, { opacity: 1, yPercent: 0, ease: 'power3.out', duration: 0.5 }, 0.5)  // 1. centre from TOP
-        .fromTo(cards[2], { opacity: 0, yPercent:  150 }, { opacity: 1, yPercent: 0, ease: 'power3.out', duration: 0.5 }, 0.62) // 2. third from BOTTOM
-        .fromTo(cards[0], { opacity: 0, xPercent: -150 }, { opacity: 1, xPercent: 0, ease: 'power3.out', duration: 0.5 }, 0.76) // 3. from LEFT
-        .fromTo(cards[3], { opacity: 0, xPercent:  150 }, { opacity: 1, xPercent: 0, ease: 'power3.out', duration: 0.5 }, 0.88);// 4. from RIGHT
+        /* Explore is pushed IN from depth (camera dollies forward) — covers early, no gap */
+        .fromTo(explore,  { opacity: 0, scale: 1.06, filter: 'blur(14px)' },
+                          { opacity: 1, scale: 1, filter: 'blur(0px)', ease: 'power3.inOut', duration: 0.5 }, 0.00)
+        /* hero content recedes into depth (parallax rate 1) */
+        .to(heroCard, { opacity: 0, y: -46, scale: 0.94, rotationX: -6, filter: 'blur(8px)', ease: 'power3.inOut', duration: 0.44 }, 0.05)
+        /* hero background recedes slower + blurs (parallax rate 2 = depth) */
+        .to(heroBg,   { opacity: 0, yPercent: -15, scale: 0.9, filter: 'blur(11px)', ease: 'power3.inOut', duration: 0.52 }, 0.02)
+        /* cards cascade — begin BEFORE explore fully settles, exact order, with 3D depth */
+        .fromTo(cards[1], { opacity: 0, yPercent: -165, scale: 0.82, rotationX:  26, filter: 'blur(8px)' },
+                          { opacity: 1, yPercent: 0, scale: 1, rotationX: 0, filter: 'blur(0px)', ease: 'power4.out', duration: 0.78 }, 0.40) // centre from TOP
+        .fromTo(cards[2], { opacity: 0, yPercent:  165, scale: 0.82, rotationX: -26, filter: 'blur(8px)' },
+                          { opacity: 1, yPercent: 0, scale: 1, rotationX: 0, filter: 'blur(0px)', ease: 'power4.out', duration: 0.78 }, 0.52) // third from BOTTOM
+        .fromTo(cards[0], { opacity: 0, xPercent: -175, scale: 0.85, rotationY:  28, filter: 'blur(8px)' },
+                          { opacity: 1, xPercent: 0, scale: 1, rotationY: 0, filter: 'blur(0px)', ease: 'power4.out', duration: 0.78 }, 0.64) // from LEFT
+        .fromTo(cards[3], { opacity: 0, xPercent:  175, scale: 0.85, rotationY: -28, filter: 'blur(8px)' },
+                          { opacity: 1, xPercent: 0, scale: 1, rotationY: 0, filter: 'blur(0px)', ease: 'power4.out', duration: 0.78 }, 0.76); // from RIGHT
     })();
   </script>
 </body>
