@@ -187,11 +187,12 @@
     .as-overlay {
       position: fixed !important;
       inset: 0 !important;
-      z-index: 30 !important;
+      z-index: 5 !important;            /* sits BEHIND the pinned hero (hero fades to reveal it) */
       margin: 0 !important;
       display: flex !important;
       align-items: center !important;
       overflow-y: auto !important;
+      background: #FDFCF9 !important;   /* guaranteed opaque backdrop — no dark gap ever */
     }
     /* while overlaid, let GSAP fully own card transforms (no CSS transition fight) */
     .as-overlay .svc-card { transition: none !important; }
@@ -784,9 +785,10 @@
       }
 
       /* ================= PINNED HERO ⇄ EXPLORE — ONE SCRUBBED CAMERA =================
-         The same camera continues: the hero recedes into depth while Explore is
-         pushed in from depth (scale+blur), overlapping into the card cascade.
-         One viewport, no whitespace, no section break. */
+         Explore is a constant OPAQUE backdrop pinned BEHIND the hero (z:5). The hero
+         (z:10) slowly fades/recedes to REVEAL it — so the viewport is never empty and
+         there is never a dark/white gap. Scrub makes it fully reversible both ways. */
+      gsap.set(hero,    { zIndex: 10 });     // hero rides above the explore backdrop while pinned
       gsap.set(explore, { opacity: 0 });
       gsap.set(cards,   { opacity: 0 });
       const setOverlay = (on) => explore.classList.toggle('as-overlay', on);
@@ -801,21 +803,18 @@
           scrub: 1.1,                 // inertia — motion decelerates naturally
           anticipatePin: 1,
           invalidateOnRefresh: true,
-          onEnter:     () => setOverlay(true),
-          onEnterBack: () => setOverlay(true),
-          onLeave:     () => setOverlay(false),
-          onLeaveBack: () => setOverlay(false)
+          // overlay is ON whenever the pin is active (both directions) — self-healing
+          onToggle: (self) => setOverlay(self.isActive)
         }
       });
 
       tl
-        /* Explore is pushed IN from depth (camera dollies forward) — covers early, no gap */
-        .fromTo(explore,  { opacity: 0, scale: 1.06, filter: 'blur(14px)' },
-                          { opacity: 1, scale: 1, filter: 'blur(0px)', ease: 'power3.inOut', duration: 0.5 }, 0.00)
-        /* hero content recedes into depth (parallax rate 1) */
-        .to(heroCard, { opacity: 0, y: -46, scale: 0.94, rotationX: -6, filter: 'blur(8px)', ease: 'power3.inOut', duration: 0.44 }, 0.05)
-        /* hero background recedes slower + blurs (parallax rate 2 = depth) */
-        .to(heroBg,   { opacity: 0, yPercent: -15, scale: 0.9, filter: 'blur(11px)', ease: 'power3.inOut', duration: 0.52 }, 0.02)
+        /* Explore backdrop settles in FIRST (behind hero) so it is always covering */
+        .fromTo(explore,  { opacity: 0, scale: 1.05, filter: 'blur(10px)' },
+                          { opacity: 1, scale: 1, filter: 'blur(0px)', ease: 'power2.out', duration: 0.22 }, 0.00)
+        /* hero recedes to REVEAL the backdrop — slow, cinematic (no gap possible) */
+        .to(heroCard, { opacity: 0, y: -44, scale: 0.95, rotationX: -5, filter: 'blur(7px)', ease: 'power3.inOut', duration: 0.5 }, 0.06)
+        .to(heroBg,   { opacity: 0, yPercent: -10, scale: 0.93, filter: 'blur(10px)', ease: 'power3.inOut', duration: 0.56 }, 0.02)
         /* cards cascade — heavily overlapping, gentle depth, NO pop / NO bounce (expo.out).
            Per-element perspective (no parent/grid change); transforms wiped once settled. */
         .fromTo(cards[1], { opacity: 0, yPercent: -95, scale: 0.94, rotationX:  12, transformPerspective: 1000, filter: 'blur(6px)' },
