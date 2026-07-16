@@ -197,6 +197,14 @@
     /* while overlaid, let GSAP fully own card transforms (no CSS transition fight) */
     .as-overlay .svc-card { transition: none !important; }
 
+    /* Hero as a fixed viewport overlay during the cinematic scene (temporary, JS-controlled).
+       Explore + the rest sit in normal flow behind it, so native scroll simply continues. */
+    .scene-hero {
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 10 !important;
+    }
+
     /* Stat boxes — hover lift + gold glow */
     .stat-box {
       transition: transform 380ms cubic-bezier(.22,1,.36,1),
@@ -721,110 +729,130 @@
        (only animation logic; DOM / design untouched)
        ========================================================= */
     (function () {
-      if (!window.gsap || !window.ScrollTrigger) return;
-      gsap.registerPlugin(ScrollTrigger);
+      if (!window.gsap) return;
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       const hero     = document.getElementById('hero');
       const heroBg   = document.querySelector('.hero-bg');
+      const handwrite= document.getElementById('handwrite');
+      const goldEdge = hero.lastElementChild;                        // thin gold border at hero bottom
       const heroCard = document.querySelector('.hero-card');
-      const heading  = heroCard.querySelector('h1');                 // animate as ONE block (no layout change)
+      const heading  = heroCard.querySelector('h1');                 // one block (no layout change)
       const paras    = heroCard.querySelectorAll('p');
       const subtitle = paras[0];
       const quote    = paras[1];
-      const ctaWrap  = heroCard.querySelector('a').parentElement;
+      const button   = heroCard.querySelector('a').parentElement;    // the CTA button wrapper
       const explore  = document.getElementById('explore');
       const cards    = gsap.utils.toArray('#explore .svc-card');     // [astrology,vastu,courses,meditation]
+      // requested mapping:  centre=[1] Vastu · bottom=[2] Courses · left=[0] Astrology · right=[3] Meditation
+      const heroLayers = [heroBg, handwrite, heroCard, goldEdge];
 
-      // elements whose transforms must be fully wiped once the intro settles
-      const heroContent = [heroBg, heroCard, heading, subtitle, quote, ctaWrap];
+      gsap.set([heroBg, heroCard, ...cards], { force3D: true });
 
-      gsap.set([heroBg, heroCard, explore, ...cards], { force3D: true });
-
-      const lockScroll = () => {
-        document.documentElement.style.overflow = 'hidden';
-        document.body.style.overflow = 'hidden';
-        window.scrollTo(0, 0);
-      };
-      const unlockScroll = () => {
-        document.documentElement.style.overflow = '';
-        document.body.style.overflow = '';
-        ScrollTrigger.refresh();
-      };
-
-      /* ---------- initial states — transform + opacity ONLY, per-element perspective
-         (no parent/layout changes; transformOrigin left at default centre) ---------- */
-      gsap.set(heroBg,   { yPercent: -26, opacity: 0, scale: 1.08, filter: 'blur(16px)' });
-      gsap.set(heroCard, { opacity: 0, y: 48, scale: 0.9, rotationX: 10, transformPerspective: 900, filter: 'blur(10px)' });
-      gsap.set(heading,  { opacity: 0, y: 30, filter: 'blur(6px)' });
-      gsap.set(subtitle, { opacity: 0, y: 28, filter: 'blur(5px)' });
-      gsap.set(quote,    { opacity: 0, y: 24, filter: 'blur(5px)' });
-      gsap.set(ctaWrap,  { opacity: 0, y: 22, scale: 0.85 });
-
-      // Wipe ALL transforms/filters once the intro is done → content sits in its exact
-      // original centered (flex) position with no leftover translate/scale/rotate.
-      const revealAll = () => gsap.set(heroContent, { clearProps: 'transform,filter,opacity,willChange' });
-
+      /* ---------- REDUCED MOTION: no scene lock, everything visible, normal page ---------- */
       if (reduce) {
-        revealAll();
-      } else {
-        /* ================= ONE CONTINUOUS INTRO CAMERA =================
-           Every layer overlaps — nothing waits for the previous to end.
-           Absolute time cues (not '+=') so the whole thing reads as ONE move. */
-        lockScroll();
-        const safety = setTimeout(() => { revealAll(); unlockScroll(); }, 6500);
-        // onComplete: unlock AND wipe every transform so the hero content returns to
-        // its exact original centered layout (no leftover translate/scale/rotate).
-        gsap.timeline({ defaults: { ease: 'expo.out' }, onComplete: () => { clearTimeout(safety); revealAll(); unlockScroll(); } })
-          .to(heroBg,    { yPercent: 0, opacity: 1, scale: 1, filter: 'blur(0px)', duration: 1.7 }, 0.00)
-          .to(heroCard,  { opacity: 1, y: 0, scale: 1, rotationX: 0, filter: 'blur(0px)', duration: 1.4, ease: 'power4.out' }, 0.38)  // begins while bg still moving
-          .to(heading,   { opacity: 1, y: 0, filter: 'blur(0px)', duration: 1.05, ease: 'power4.out' }, 0.72)                          // before card settles
-          .to(subtitle,  { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.95, ease: 'power3.out' }, 1.06)                          // before heading settles
-          .to(quote,     { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.85, ease: 'power3.out' }, 1.24)
-          .to(ctaWrap,   { opacity: 1, y: 0, scale: 1, duration: 0.95, ease: 'power4.out' }, 1.38);                                     // before subtitle settles
+        gsap.set([heroBg, heroCard, heading, subtitle, quote, button, explore, ...cards], { clearProps: 'all' });
+        return;
       }
 
-      /* ================= PINNED HERO ⇄ EXPLORE — ONE SCRUBBED CAMERA =================
-         Explore is a constant OPAQUE backdrop pinned BEHIND the hero (z:5). The hero
-         (z:10) slowly fades/recedes to REVEAL it — so the viewport is never empty and
-         there is never a dark/white gap. Scrub makes it fully reversible both ways. */
-      gsap.set(hero,    { zIndex: 10 });     // hero rides above the explore backdrop while pinned
+      /* ---------- Hero becomes a FIXED viewport overlay (temporary, permitted).
+         Explore + the rest sit in normal flow behind it, so after the transition
+         native scroll simply continues from the Explore section. ---------- */
+      hero.classList.add('scene-hero');            // position:fixed; inset:0; z-index:10
       gsap.set(explore, { opacity: 0 });
-      gsap.set(cards,   { opacity: 0 });
-      const setOverlay = (on) => explore.classList.toggle('as-overlay', on);
 
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: hero,
-          start: 'top top',
-          end: '+=1700',
-          pin: true,
-          pinSpacing: true,
-          scrub: 1.1,                 // inertia — motion decelerates naturally
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-          // overlay is ON whenever the pin is active (both directions) — self-healing
-          onToggle: (self) => setOverlay(self.isActive)
+      /* ---------- initial hidden states (opacity + transform only) ---------- */
+      gsap.set(heroBg,   { opacity: 0, scale: 1.08, yPercent: -8, filter: 'blur(16px)' });
+      gsap.set(heroCard, { opacity: 0, y: 46, scale: 0.9, filter: 'blur(10px)' });
+      gsap.set(heading,  { opacity: 0, y: 30, filter: 'blur(6px)' });
+      gsap.set(subtitle, { opacity: 0, y: 26, filter: 'blur(5px)' });
+      gsap.set(quote,    { opacity: 0, y: 22, filter: 'blur(5px)' });
+      gsap.set(button,   { opacity: 0, y: 20, scale: 0.85 });
+
+      /* =====================================================================
+         ONE MASTER TIMELINE (paused). Labels:
+           start → [INTRO] → 'heroReady' → [TRANSFORM] → 'exploreReady' → [CARDS] → 'end'
+         Driven by wheel/touch (play to 'end' / reverse to 'heroReady').
+         ===================================================================== */
+      const master = gsap.timeline({ paused: true });
+      master
+        /* ---- INTRO (bg+astrologer → glass box → heading → paragraph → button), overlapping ---- */
+        .to(heroBg,   { opacity: 1, scale: 1, yPercent: 0, filter: 'blur(0px)', duration: 1.5, ease: 'expo.out' })
+        .to(heroCard, { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 1.2, ease: 'power4.out' }, '-=1.0')
+        .to(heading,  { opacity: 1, y: 0, filter: 'blur(0px)', duration: 1.0, ease: 'power4.out' }, '-=0.9')
+        .to(subtitle, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.9, ease: 'power3.out' }, '-=0.75')
+        .to(quote,    { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.8, ease: 'power3.out' }, '-=0.65')
+        .to(button,   { opacity: 1, y: 0, scale: 1, duration: 0.85, ease: 'power4.out' }, '-=0.6')
+        .addLabel('heroReady')
+        /* ---- TRANSFORM: camera-push + cross-dissolve into Explore ---- */
+        .to(explore,  { opacity: 1, duration: 0.6, ease: 'power2.out' }, 'heroReady')                                   // backdrop dissolves in fast (no gap)
+        .to(heroBg,   { opacity: 0, scale: 1.16, x: 44, y: -34, filter: 'blur(6px)', duration: 1.15, ease: 'power3.inOut' }, 'heroReady')   // camera push: zoom + shift
+        .to([heroCard, handwrite, goldEdge], { opacity: 0, y: -28, filter: 'blur(6px)', duration: 0.9, ease: 'power3.inOut' }, 'heroReady+=0.08')
+        .addLabel('exploreReady')
+        /* ---- CARDS: centre(top) → bottom → left → right, natural overlap ---- */
+        .from(cards[1], { yPercent: -120, opacity: 0, duration: 0.8, ease: 'power3.out' }, 'exploreReady')
+        .from(cards[2], { yPercent:  120, opacity: 0, duration: 0.8, ease: 'power3.out' }, 'exploreReady+=0.16')
+        .from(cards[0], { xPercent: -120, opacity: 0, duration: 0.8, ease: 'power2.out' }, 'exploreReady+=0.32')
+        .from(cards[3], { xPercent:  120, opacity: 0, duration: 0.8, ease: 'power2.out' }, 'exploreReady+=0.44')
+        .addLabel('end');
+
+      /* =====================================================================
+         SCROLL-LOCK + WHEEL/TOUCH HIJACK (play / reverse the master timeline)
+         ===================================================================== */
+      let phase   = 'intro';     // 'intro' | 'hero' | 'explore'
+      let busy    = false;       // isAnimating — blocks repeated triggers mid-play
+      let locked  = true;        // block native scroll while true
+
+      const preventIfLocked = (e) => { if (locked) e.preventDefault(); };
+      window.addEventListener('wheel',     onWheel,     { passive: false });
+      window.addEventListener('touchstart',onTouchStart,{ passive: true  });
+      window.addEventListener('touchmove', onTouchMove, { passive: false });
+
+      function onWheel(e) {
+        preventIfLocked(e);
+        handleIntent(e.deltaY > 0 ? 1 : -1);
+      }
+      let touchY = 0;
+      function onTouchStart(e) { touchY = e.touches[0].clientY; }
+      function onTouchMove(e) {
+        preventIfLocked(e);
+        const dy = touchY - e.touches[0].clientY;
+        if (Math.abs(dy) > 6) { handleIntent(dy > 0 ? 1 : -1); touchY = e.touches[0].clientY; }
+      }
+
+      function handleIntent(dir) {
+        if (busy) return;
+        // FORWARD: hero → explore (first downward scroll while on hero scene)
+        if (phase === 'hero' && dir > 0) {
+          busy = true;
+          master.tweenTo('end', { onComplete: forwardDone });
         }
-      });
+        // REVERSE: explore → hero (upward scroll while at the very top of explore)
+        else if (phase === 'explore' && dir < 0 && window.scrollY <= 2) {
+          busy = true;
+          locked = true;
+          master.tweenTo('heroReady', { onComplete: reverseDone });
+        }
+      }
 
-      tl
-        /* Explore backdrop settles in FIRST (behind hero) so it is always covering */
-        .fromTo(explore,  { opacity: 0, scale: 1.05, filter: 'blur(10px)' },
-                          { opacity: 1, scale: 1, filter: 'blur(0px)', ease: 'power2.out', duration: 0.22 }, 0.00)
-        /* hero recedes to REVEAL the backdrop — slow, cinematic (no gap possible) */
-        .to(heroCard, { opacity: 0, y: -44, scale: 0.95, rotationX: -5, filter: 'blur(7px)', ease: 'power3.inOut', duration: 0.5 }, 0.06)
-        .to(heroBg,   { opacity: 0, yPercent: -10, scale: 0.93, filter: 'blur(10px)', ease: 'power3.inOut', duration: 0.56 }, 0.02)
-        /* cards cascade — heavily overlapping, gentle depth, NO pop / NO bounce (expo.out).
-           Per-element perspective (no parent/grid change); transforms wiped once settled. */
-        .fromTo(cards[1], { opacity: 0, yPercent: -95, scale: 0.94, rotationX:  12, transformPerspective: 1000, filter: 'blur(6px)' },
-                          { opacity: 1, yPercent: 0, scale: 1, rotationX: 0, filter: 'blur(0px)', ease: 'expo.out', duration: 0.95 }, 0.40) // centre from TOP
-        .fromTo(cards[2], { opacity: 0, yPercent:  95, scale: 0.94, rotationX: -12, transformPerspective: 1000, filter: 'blur(6px)' },
-                          { opacity: 1, yPercent: 0, scale: 1, rotationX: 0, filter: 'blur(0px)', ease: 'expo.out', duration: 0.95 }, 0.55) // bottom card
-        .fromTo(cards[0], { opacity: 0, xPercent: -95, scale: 0.94, rotationY:  14, transformPerspective: 1000, filter: 'blur(6px)' },
-                          { opacity: 1, xPercent: 0, scale: 1, rotationY: 0, filter: 'blur(0px)', ease: 'expo.out', duration: 0.95 }, 0.70) // from LEFT
-        .fromTo(cards[3], { opacity: 0, xPercent:  95, scale: 0.94, rotationY: -14, transformPerspective: 1000, filter: 'blur(6px)' },
-                          { opacity: 1, xPercent: 0, scale: 1, rotationY: 0, filter: 'blur(0px)', ease: 'expo.out', duration: 0.95 }, 0.82); // from RIGHT
+      function forwardDone() {
+        busy = false;
+        phase = 'explore';
+        locked = false;                       // release: native scroll continues from Explore
+        hero.style.pointerEvents = 'none';    // faded hero overlay no longer blocks clicks (nav stays clickable)
+        window.scrollTo(0, 0);
+      }
+      function reverseDone() {
+        busy = false;
+        phase = 'hero';
+        locked = true;                        // hero scene is locked again (waits for next down-scroll)
+        hero.style.pointerEvents = '';
+        window.scrollTo(0, 0);
+      }
+
+      /* ---------- Play the intro on load, then hold on the hero scene ---------- */
+      const safety = setTimeout(() => { master.progress(master.labels.heroReady / master.duration()); phase = 'hero'; }, 7000);
+      master.tweenTo('heroReady', { onComplete: () => { clearTimeout(safety); phase = 'hero'; } });
     })();
   </script>
 </body>
