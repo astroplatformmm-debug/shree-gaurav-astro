@@ -755,10 +755,8 @@
         return;
       }
 
-      /* ---------- Hero becomes a FIXED viewport overlay (temporary, permitted).
-         Explore + the rest sit in normal flow behind it, so after the transition
-         native scroll simply continues from the Explore section. ---------- */
-      hero.classList.add('scene-hero');            // position:fixed; inset:0; z-index:10
+      /* Hero stays in NORMAL flow at rest (centered). position:fixed is applied ONLY
+         during a transition (see sceneMode) and removed the instant it finishes. */
       gsap.set(explore, { opacity: 0 });
 
       /* ---------- initial hidden states (opacity + transform only) ---------- */
@@ -797,61 +795,79 @@
         .addLabel('end');
 
       /* =====================================================================
-         SCROLL-LOCK + WHEEL/TOUCH HIJACK (play / reverse the master timeline)
+         SCROLL-LOCK + WHEEL/TOUCH/KEY HIJACK  (play / reverse the master timeline)
          ===================================================================== */
-      let phase   = 'intro';     // 'intro' | 'hero' | 'explore'
-      let busy    = false;       // isAnimating — blocks repeated triggers mid-play
-      let locked  = true;        // block native scroll while true
+      const htmlEl = document.documentElement, bodyEl = document.body;
+      const heroH  = () => hero.offsetHeight || window.innerHeight;   // hero flow height (≈ 100vh)
 
-      const preventIfLocked = (e) => { if (locked) e.preventDefault(); };
-      window.addEventListener('wheel',     onWheel,     { passive: false });
-      window.addEventListener('touchstart',onTouchStart,{ passive: true  });
-      window.addEventListener('touchmove', onTouchMove, { passive: false });
+      let phase  = 'intro';   // 'intro' | 'hero' | 'explore'
+      let busy   = false;     // isAnimating — blocks repeated triggers while a segment plays
+      let locked = true;      // native scroll blocked while true
 
-      function onWheel(e) {
-        preventIfLocked(e);
-        handleIntent(e.deltaY > 0 ? 1 : -1);
-      }
+      // Bulletproof lock: overflow:hidden AND preventDefault (belt + suspenders).
+      const lock   = () => { locked = true;  htmlEl.style.overflow = 'hidden'; bodyEl.style.overflow = 'hidden'; };
+      const unlock = () => { locked = false; htmlEl.style.overflow = '';        bodyEl.style.overflow = ''; };
+
+      // position:fixed overlays applied ONLY while a transition is playing, removed right after.
+      const sceneMode = (on) => {
+        hero.classList.toggle('scene-hero', on);     // hero → fixed overlay (z:10)
+        explore.classList.toggle('as-overlay', on);  // explore → fixed opaque backdrop (z:5)
+      };
+
+      lock();  // locked from load (intro + hero scene)
+
+      window.addEventListener('wheel',      onWheel,      { passive: false });
+      window.addEventListener('touchstart', onTouchStart, { passive: true  });
+      window.addEventListener('touchmove',  onTouchMove,  { passive: false });
+      window.addEventListener('keydown',    onKey,        { passive: false });
+
+      function onWheel(e) { if (locked) e.preventDefault(); handleIntent(e.deltaY > 0 ? 1 : -1); }
       let touchY = 0;
       function onTouchStart(e) { touchY = e.touches[0].clientY; }
       function onTouchMove(e) {
-        preventIfLocked(e);
+        if (locked) e.preventDefault();
         const dy = touchY - e.touches[0].clientY;
         if (Math.abs(dy) > 6) { handleIntent(dy > 0 ? 1 : -1); touchY = e.touches[0].clientY; }
       }
+      function onKey(e) {
+        if (!locked) return;
+        if (['ArrowDown', 'PageDown', ' ', 'Spacebar'].includes(e.key)) { e.preventDefault(); handleIntent(1); }
+        else if (['ArrowUp', 'PageUp'].includes(e.key))                 { e.preventDefault(); handleIntent(-1); }
+      }
 
       function handleIntent(dir) {
-        if (busy) return;
-        // FORWARD: hero → explore (first downward scroll while on hero scene)
+        if (busy || phase === 'intro') return;
+        // FORWARD — first downward scroll on the hero scene
         if (phase === 'hero' && dir > 0) {
           busy = true;
+          sceneMode(true);                                    // fix hero + explore as overlays for the morph
           master.tweenTo('end', { onComplete: forwardDone });
         }
-        // REVERSE: explore → hero (upward scroll while at the very top of explore)
-        else if (phase === 'explore' && dir < 0 && window.scrollY <= 2) {
+        // REVERSE — upward scroll at the very top of Explore Services
+        else if (phase === 'explore' && dir < 0 && window.scrollY <= heroH() + 4) {
           busy = true;
-          locked = true;
+          lock();
+          sceneMode(true);
           master.tweenTo('heroReady', { onComplete: reverseDone });
         }
       }
 
       function forwardDone() {
-        busy = false;
+        sceneMode(false);              // remove position:fixed → back to normal flow
+        window.scrollTo(0, heroH());   // Explore now sits at the top of the viewport
+        unlock();                      // native scrolling continues from Explore downward
         phase = 'explore';
-        locked = false;                       // release: native scroll continues from Explore
-        hero.style.pointerEvents = 'none';    // faded hero overlay no longer blocks clicks (nav stays clickable)
-        window.scrollTo(0, 0);
+        busy = false;
       }
       function reverseDone() {
-        busy = false;
-        phase = 'hero';
-        locked = true;                        // hero scene is locked again (waits for next down-scroll)
-        hero.style.pointerEvents = '';
+        sceneMode(false);              // remove position:fixed → Hero back in normal flow, centered
         window.scrollTo(0, 0);
+        phase = 'hero';                // stays locked — waits for the next downward scroll
+        busy = false;
       }
 
       /* ---------- Play the intro on load, then hold on the hero scene ---------- */
-      const safety = setTimeout(() => { master.progress(master.labels.heroReady / master.duration()); phase = 'hero'; }, 7000);
+      const safety = setTimeout(() => { if (phase === 'intro') { master.seek('heroReady'); phase = 'hero'; } }, 4000);
       master.tweenTo('heroReady', { onComplete: () => { clearTimeout(safety); phase = 'hero'; } });
     })();
   </script>
