@@ -48,7 +48,7 @@
         inset 0 0 26px rgba(201,149,61,0.10),
         0 12px 40px rgba(0,0,0,0.45),
         0 0 22px rgba(201,149,61,0.10);
-      /* nav fade-in-from-top handled by the intro GSAP timeline (see script) */
+      animation: navIn 1.3s ease-out both;
     }
     @keyframes navIn {
       from { opacity: 0; transform: translateY(-22px); filter: blur(10px); }
@@ -173,14 +173,12 @@
 
     /* Service cards — hover lift + image zoom */
     .svc-card {
-      transition: transform 350ms cubic-bezier(.22,1,.36,1),
-                  box-shadow 350ms ease,
-                  filter 350ms ease !important;
+      transition: transform 400ms cubic-bezier(.22,1,.36,1),
+                  box-shadow 400ms ease !important;
     }
     .svc-card:hover {
-      transform: translateY(-8px) scale(1.03);
-      box-shadow: 0 26px 52px rgba(201,149,61,0.35), 0 0 24px rgba(233,200,119,0.42);
-      filter: brightness(1.05);
+      transform: translateY(-8px);
+      box-shadow: 0 22px 44px rgba(201,149,61,0.28);
     }
     .svc-img { transition: transform 750ms cubic-bezier(.22,1,.36,1); }
     .svc-card:hover .svc-img { transform: scale(1.09); }
@@ -205,42 +203,6 @@
       position: fixed !important;
       inset: 0 !important;
       z-index: 10 !important;
-    }
-
-    /* animation-only: dark "emerge from darkness" overlay (fixed, no layout impact) */
-    #intro-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      background: #0a0705;
-      pointer-events: none;
-      will-change: opacity;
-    }
-
-    /* animation-only: glossy diagonal glass sweep (between hero-bg and hero content) */
-    .hero-glass {
-      position: absolute;
-      top: 12px; left: 12px; right: 12px; bottom: 12px;   /* matches .hero-bg inset, no layout push */
-      z-index: 2;                                          /* above hero-bg (auto), below content (z-10) */
-      border-radius: 30px;
-      overflow: hidden;
-      pointer-events: none;
-      opacity: 0;
-      will-change: transform, opacity;
-    }
-    .hero-glass::before {
-      content: "";
-      position: absolute;
-      top: -20%; bottom: -20%;
-      left: -40%; width: 55%;
-      background: linear-gradient(105deg,
-        rgba(255,255,255,0) 0%,
-        rgba(255,255,255,0.10) 40%,
-        rgba(255,255,255,0.35) 50%,
-        rgba(255,255,255,0.10) 60%,
-        rgba(255,255,255,0) 100%);
-      filter: blur(6px);
-      transform: skewX(-12deg);
     }
 
     /* Stat boxes — hover lift + gold glow */
@@ -360,9 +322,6 @@
 </head>
 <body class="bg-[#FDFCF9]">
 
-  <!-- animation-only: dark overlay that fades out on load (does not affect layout) -->
-  <div id="intro-overlay"></div>
-
   <!-- ===== HERO ===== -->
   <section id="hero"
     class="relative w-full overflow-hidden min-h-screen flex flex-col"
@@ -370,9 +329,6 @@
 
     <!-- animated hero background (drops in from top on load) -->
     <div class="hero-bg"></div>
-
-    <!-- animation-only: glossy diagonal glass reflection that sweeps across once -->
-    <div class="hero-glass" aria-hidden="true"></div>
 
     <!-- handwritten signature — typed in letter by letter on load -->
     <div class="handwrite" id="handwrite" data-text="Shree Gaurav|Astro"></div>
@@ -777,76 +733,65 @@
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       const hero     = document.getElementById('hero');
-      const overlay  = document.getElementById('intro-overlay');     // dark "emerge from darkness" layer
-      const glass    = document.querySelector('.hero-glass');        // glossy diagonal sweep
-      const heroBg   = document.querySelector('.hero-bg');           // background + astrologer (one combined layer)
+      const heroBg   = document.querySelector('.hero-bg');
       const handwrite= document.getElementById('handwrite');
       const goldEdge = hero.lastElementChild;                        // thin gold border at hero bottom
-      const navWrap  = document.querySelector('.nav-wrap');          // existing navbar (reused, not recreated)
-      const heroCard = document.querySelector('.hero-card');         // glass content box
-      const heading  = heroCard.querySelector('h1');
+      const heroCard = document.querySelector('.hero-card');
+      const heading  = heroCard.querySelector('h1');                 // one block (no layout change)
       const paras    = heroCard.querySelectorAll('p');
       const subtitle = paras[0];
       const quote    = paras[1];
-      const button   = heroCard.querySelector('a').parentElement;    // CTA button wrapper
+      const button   = heroCard.querySelector('a').parentElement;    // the CTA button wrapper
       const explore  = document.getElementById('explore');
-      const expTitle = explore.querySelector('h2');                  // "Explore Services" heading
-      const expDiv   = expTitle.nextElementSibling;                  // ornament divider (acts as subtitle)
-      const cards    = gsap.utils.toArray('#explore .svc-card');     // exactly 4 cards
+      const cards    = gsap.utils.toArray('#explore .svc-card');     // [astrology,vastu,courses,meditation]
+      // requested mapping:  centre=[1] Vastu · bottom=[2] Courses · left=[0] Astrology · right=[3] Meditation
+      const heroLayers = [heroBg, handwrite, heroCard, goldEdge];
 
       gsap.set([heroBg, heroCard, ...cards], { force3D: true });
 
       /* ---------- REDUCED MOTION: no scene lock, everything visible, normal page ---------- */
       if (reduce) {
-        gsap.set([overlay], { autoAlpha: 0 });
-        gsap.set([heroBg, heroCard, heading, subtitle, quote, button, navWrap, explore, ...cards], { clearProps: 'all' });
+        gsap.set([heroBg, heroCard, heading, subtitle, quote, button, explore, ...cards], { clearProps: 'all' });
         return;
       }
 
-      /* Hero stays in NORMAL flow at rest (centered). position:fixed only during a transition. */
+      /* Hero stays in NORMAL flow at rest (centered). position:fixed is applied ONLY
+         during a transition (see sceneMode) and removed the instant it finishes. */
       gsap.set(explore, { opacity: 0 });
 
-      /* ---------- initial hidden states (opacity / transform / filter only) ---------- */
-      gsap.set(overlay,  { opacity: 1 });                                        // dark cover on top
-      gsap.set(glass,    { opacity: 0, xPercent: -120 });                        // glass strip off-screen left
-      gsap.set(heroBg,   { opacity: 0, filter: 'brightness(0.7)', scale: 1.03, y: 24 });  // emerges from darkness + settles
-      gsap.set(heroCard, { opacity: 0, y: 40, scale: 0.96 });
-      gsap.set(heading,  { opacity: 0, y: 30 });
-      gsap.set(subtitle, { opacity: 0, y: 25 });
-      gsap.set(quote,    { opacity: 0, y: 25 });
-      gsap.set(button,   { opacity: 0, y: 20 });
-      gsap.set(navWrap,  { opacity: 0, y: -20 });
+      /* ---------- initial hidden states (opacity + transform only) ---------- */
+      gsap.set(heroBg,   { opacity: 0, scale: 1.08, yPercent: -8, filter: 'blur(16px)' });
+      gsap.set(heroCard, { opacity: 0, y: 46, scale: 0.9, filter: 'blur(10px)' });
+      gsap.set(heading,  { opacity: 0, y: 30, filter: 'blur(6px)' });
+      gsap.set(subtitle, { opacity: 0, y: 26, filter: 'blur(5px)' });
+      gsap.set(quote,    { opacity: 0, y: 22, filter: 'blur(5px)' });
+      gsap.set(button,   { opacity: 0, y: 20, scale: 0.85 });
 
       /* =====================================================================
          ONE MASTER TIMELINE (paused). Labels:
            start → [INTRO] → 'heroReady' → [TRANSFORM] → 'exploreReady' → [CARDS] → 'end'
-         Intro plays on load; wheel/touch drives play→'end' / reverse→'heroReady'.
+         Driven by wheel/touch (play to 'end' / reverse to 'heroReady').
          ===================================================================== */
       const master = gsap.timeline({ paused: true });
       master
-        /* ---- 1. EMERGE FROM DARKNESS (0–1.2s): overlay fades, bg brightens+appears ---- */
-        .to(overlay, { opacity: 0, duration: 1.2, ease: 'expo.out' }, 0)
-        .to(heroBg,  { opacity: 1, filter: 'brightness(1)', scale: 1, y: 0, duration: 1.2, ease: 'expo.out' }, 0)
-        .to(navWrap, { opacity: 1, y: 0, duration: 1.0, ease: 'power3.out' }, 0.5)                 // navbar fades in from top (parallel)
-        /* ---- 2. GLASS SWIPE (once, left→right) ---- */
-        .set(glass,  { opacity: 1 }, 0.9)
-        .fromTo(glass, { xPercent: -120 }, { xPercent: 120, duration: 0.8, ease: 'power2.out' }, 0.9)
-        .set(glass,  { opacity: 0 }, 1.72)
-        /* ---- 3. HERO CONTENT REVEAL (after glass) ---- */
-        .to(heroCard, { opacity: 1, y: 0, scale: 1, duration: 0.85, ease: 'power3.out' }, 1.7)
-        .to(heading,  { opacity: 1, y: 0, duration: 0.75, ease: 'power3.out' }, 1.85)              // +0.15
-        .to([subtitle, quote], { opacity: 1, y: 0, duration: 0.75, ease: 'power3.out', stagger: 0.08 }, 2.0)  // +0.30
-        .to(button,   { opacity: 1, y: 0, duration: 0.75, ease: 'power3.out' }, 2.15)             // +0.45
+        /* ---- INTRO (bg+astrologer → glass box → heading → paragraph → button), overlapping ---- */
+        .to(heroBg,   { opacity: 1, scale: 1, yPercent: 0, filter: 'blur(0px)', duration: 1.5, ease: 'expo.out' })
+        .to(heroCard, { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 1.2, ease: 'power4.out' }, '-=1.0')
+        .to(heading,  { opacity: 1, y: 0, filter: 'blur(0px)', duration: 1.0, ease: 'power4.out' }, '-=0.9')
+        .to(subtitle, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.9, ease: 'power3.out' }, '-=0.75')
+        .to(quote,    { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.8, ease: 'power3.out' }, '-=0.65')
+        .to(button,   { opacity: 1, y: 0, scale: 1, duration: 0.85, ease: 'power4.out' }, '-=0.6')
         .addLabel('heroReady')
-        /* ---- 4a. HERO FADES OUT (opacity, scale 0.97, blur 10px) ---- */
-        .to([heroBg, heroCard, handwrite, goldEdge], { opacity: 0, scale: 0.97, filter: 'blur(10px)', duration: 0.75, ease: 'power2.inOut' }, 'heroReady')
-        /* ---- 4b. EXPLORE ENTERS (cross-dissolve): title, then subtitle/divider ---- */
-        .to(explore,  { opacity: 1, duration: 0.5, ease: 'power2.out' }, 'heroReady')
-        .from(expTitle, { opacity: 0, y: 50, duration: 0.6, ease: 'power3.out' }, 'heroReady+=0.2')
-        .from(expDiv,   { opacity: 0, y: 20, duration: 0.5, ease: 'power3.out' }, 'heroReady+=0.35')
+        /* ---- TRANSFORM: camera-push + cross-dissolve into Explore ---- */
+        .to(explore,  { opacity: 1, duration: 0.6, ease: 'power2.out' }, 'heroReady')                                   // backdrop dissolves in fast (no gap)
+        .to(heroBg,   { opacity: 0, scale: 1.16, x: 44, y: -34, filter: 'blur(6px)', duration: 1.15, ease: 'power3.inOut' }, 'heroReady')   // camera push: zoom + shift
+        .to([heroCard, handwrite, goldEdge], { opacity: 0, y: -28, filter: 'blur(6px)', duration: 0.9, ease: 'power3.inOut' }, 'heroReady+=0.08')
         .addLabel('exploreReady')
-        /* ---- 4c. CARDS: staggered (one after another), y80→0, scale0.92→1 ---- */
-        .from(cards, { opacity: 0, y: 80, scale: 0.92, duration: 0.7, ease: 'power3.out', stagger: 0.12 }, 'exploreReady')
+        /* ---- CARDS: centre(top) → bottom → left → right, natural overlap ---- */
+        .from(cards[1], { yPercent: -120, opacity: 0, duration: 0.8, ease: 'power3.out' }, 'exploreReady')
+        .from(cards[2], { yPercent:  120, opacity: 0, duration: 0.8, ease: 'power3.out' }, 'exploreReady+=0.16')
+        .from(cards[0], { xPercent: -120, opacity: 0, duration: 0.8, ease: 'power2.out' }, 'exploreReady+=0.32')
+        .from(cards[3], { xPercent:  120, opacity: 0, duration: 0.8, ease: 'power2.out' }, 'exploreReady+=0.44')
         .addLabel('end');
 
       /* =====================================================================
