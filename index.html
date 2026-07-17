@@ -810,12 +810,12 @@
       gsap.set(overlay,  { opacity: 1 });                                        // dark cover on top
       gsap.set(glass,    { opacity: 0, xPercent: -120 });                        // glass strip off-screen left
       gsap.set(heroBg,   { opacity: 0, filter: 'brightness(0.7)', scale: 1.03, y: 24 });  // emerges from darkness + settles
-      gsap.set(heroCard, { opacity: 0, y: 40, scale: 0.96 });
-      gsap.set(heading,  { opacity: 0, y: 30 });
-      gsap.set(subtitle, { opacity: 0, y: 25 });
-      gsap.set(quote,    { opacity: 0, y: 25 });
-      gsap.set(button,   { opacity: 0, y: 20 });
-      gsap.set(navWrap,  { opacity: 0, y: -20 });
+      gsap.set(heroCard, { opacity: 0, y: 40, scale: 0.95 });   // Hero Image reveal: y40, scale 0.95→1
+      gsap.set(heading,  { opacity: 0, y: 35 });                // Main Heading: y35
+      gsap.set(subtitle, { opacity: 0, y: 30 });                // Paragraph: y30
+      gsap.set(quote,    { opacity: 0, y: 30 });
+      gsap.set(button,   { opacity: 0, y: 25 });                // Buttons: y25
+      gsap.set(navWrap,  { opacity: 0, y: -25 });               // Navbar: y -25
 
       /* =====================================================================
          ONE MASTER TIMELINE (paused). Labels:
@@ -842,8 +842,8 @@
         .to([heroBg, heroCard, handwrite, goldEdge], { opacity: 0, scale: 0.97, filter: 'blur(10px)', duration: 0.75, ease: 'power2.inOut' }, 'heroReady')
         /* ---- 4b. EXPLORE ENTERS (cross-dissolve): title, then subtitle/divider ---- */
         .to(explore,  { opacity: 1, duration: 0.5, ease: 'power2.out' }, 'heroReady')
-        .from(expTitle, { opacity: 0, y: 50, duration: 0.6, ease: 'power3.out' }, 'heroReady+=0.2')
-        .from(expDiv,   { opacity: 0, y: 20, duration: 0.5, ease: 'power3.out' }, 'heroReady+=0.35')
+        .from(expTitle, { opacity: 0, y: 60, duration: 0.6, ease: 'power3.out' }, 'heroReady+=0.2')   // Title: y60
+        .from(expDiv,   { opacity: 0, y: 40, duration: 0.5, ease: 'power3.out' }, 'heroReady+=0.35')  // Subtitle: y40
         .addLabel('exploreReady')
         /* ---- 4c. CARDS: staggered (one after another), y80→0, scale0.92→1 ---- */
         .from(cards, { opacity: 0, y: 80, scale: 0.92, duration: 0.7, ease: 'power3.out', stagger: 0.12 }, 'exploreReady')
