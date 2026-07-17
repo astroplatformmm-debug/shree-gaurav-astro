@@ -50,10 +50,6 @@
         0 0 22px rgba(201,149,61,0.10);
       /* nav fade-in-from-top handled by the intro GSAP timeline (see script) */
     }
-    @keyframes navIn {
-      from { opacity: 0; transform: translateY(-22px); filter: blur(10px); }
-      to   { opacity: 1; transform: translateY(0);     filter: blur(0);    }
-    }
 
     .nav-item {
       position: relative;
@@ -254,13 +250,6 @@
       border-color: rgba(212,162,76,0.75);
       box-shadow: 0 0 30px rgba(201,149,61,0.35), inset 0 0 22px rgba(201,149,61,0.15);
     }
-
-    /* gentle floating ornament */
-    @keyframes floaty {
-      0%,100% { transform: translateY(0); }
-      50%     { transform: translateY(-6px); }
-    }
-    .floaty { animation: floaty 4s ease-in-out infinite; }
 
     /* Handwritten "Shree Gaurav Astro" — writes itself in on load */
     /* Gincu — drop Gincu.ttf/.otf into the site folder and it loads automatically */
@@ -830,58 +819,69 @@
            2. glass swipe (once)
            3. navbar → hero image → heading → paragraph → button
          ===================================================================== */
-      lock();
-      const safety = setTimeout(() => { unlock(); ScrollTrigger.refresh(); }, 6000);
-      gsap.timeline({ onComplete: () => { clearTimeout(safety); unlock(); ScrollTrigger.refresh(); } })
-        .to(overlay, { opacity: 0, duration: 1.2, ease: 'expo.out' }, 0)
-        .to(heroBg,  { opacity: 1, yPercent: 0, filter: 'brightness(1)', scale: 1, duration: 1.3, ease: 'expo.out' }, 0)   // drops from top
-        .to(navWrap, { opacity: 1, y: 0, duration: 1.0, ease: 'power3.out' }, 0.5)
-        .set(glass,  { opacity: 1 }, 0.95)
-        .fromTo(glass, { xPercent: -120 }, { xPercent: 120, duration: 0.85, ease: 'power2.out' }, 0.95)
-        .set(glass,  { opacity: 0 }, 1.85)
-        .to(heroCard, { opacity: 1, y: 0, scale: 1, duration: 0.85, ease: 'power3.out' }, 1.75)
-        .to(heading,  { opacity: 1, y: 0, duration: 0.75, ease: 'power3.out' }, 1.9)
-        .to([subtitle, quote], { opacity: 1, y: 0, duration: 0.75, ease: 'power3.out', stagger: 0.08 }, 2.05)
-        .to(button,   { opacity: 1, y: 0, duration: 0.75, ease: 'power3.out' }, 2.2);
+      /* ---- shared motion system: one easing language + one rhythm ---- */
+      const EASE_REVEAL = 'power3.out';     // content rises/settles
+      const EASE_BIG    = 'expo.out';       // large "reveal" moments (curtain, bg, glass)
+      const STEP        = 0.26;             // consistent beat between sequential hero elements
 
       /* =====================================================================
-         SCROLL-LINKED TRANSITION (scrubbed) — Hero → Explore, tied to scroll.
-         Everything happens smoothly WITH the scroll (Apple-style), no jump.
-           • hero fades out (opacity/scale/blur) as you scroll
-           • Explore opaque backdrop cross-dissolves in BEHIND the hero (no brown gap)
-           • title + subtitle rise
-           • cards: 2 from TOP + 3 from BOTTOM, then 1 & 4 settle in
+         MASTER INTRO TIMELINE (auto, plays once) — one continuous, sequential reveal.
+         Page reveal (curtain) → bg emerges → glass sheen → Navbar → Hero → Heading
+         → Description → CTA. Each beat starts one STEP after the previous (never together).
+         ===================================================================== */
+      lock();
+      const safety = setTimeout(() => { unlock(); ScrollTrigger.refresh(); }, 6500);
+      gsap.timeline({ defaults: { ease: EASE_REVEAL }, onComplete: () => { clearTimeout(safety); unlock(); ScrollTrigger.refresh(); } })
+        /* 1 — page reveal: the curtain lifts, background emerges from darkness */
+        .to(overlay, { opacity: 0, duration: 1.5, ease: EASE_BIG }, 0)
+        .to(heroBg,  { opacity: 1, yPercent: 0, filter: 'brightness(1)', scale: 1, duration: 1.7, ease: EASE_BIG }, 0.15)
+        /* 2 — luxury glass sheen sweeps once (overlaps the tail of the reveal) */
+        .set(glass,  { opacity: 1 }, 1.35)
+        .fromTo(glass, { xPercent: -120 }, { xPercent: 120, duration: 1.05, ease: 'power2.inOut' }, 1.35)
+        .set(glass,  { opacity: 0 }, 2.45)
+        /* 3 — sequential foreground: Navbar → Hero box → Heading → Description → CTA */
+        .to(navWrap,  { opacity: 1, y: 0, duration: 1.0 }, 1.85)                         // Navbar
+        .to(heroCard, { opacity: 1, y: 0, scale: 1, duration: 1.05, ease: 'power4.out' }, 1.85 + STEP)      // Hero image / glass box
+        .to(heading,  { opacity: 1, y: 0, duration: 1.0, ease: 'power4.out' }, 1.85 + STEP * 2)             // Heading
+        .to([subtitle, quote], { opacity: 1, y: 0, duration: 0.95, stagger: 0.1 }, 1.85 + STEP * 3)         // Description
+        .to(button,   { opacity: 1, y: 0, duration: 0.95, ease: 'power4.out' }, 1.85 + STEP * 4);           // CTA
+
+      /* =====================================================================
+         SCROLL-LINKED CINEMATIC TRANSITION (scrubbed) — Hero → Explore as ONE move.
+         Same easing language; slower distance + inertia so the FIRST scroll feels
+         controlled and continuous, never an abrupt cut.
          ===================================================================== */
       gsap.set(hero,    { zIndex: 10 });      // hero rides above the explore backdrop while pinned
-      gsap.set(explore, { opacity: 0 });      // whole explore hidden until the scrub reveals it
+      gsap.set(explore, { opacity: 0 });      // explore hidden until the scrub reveals it
       const setOverlay = (on) => explore.classList.toggle('as-overlay', on);   // explore = fixed opaque backdrop (z:5)
 
       gsap.timeline({
+        defaults: { ease: EASE_REVEAL },
         scrollTrigger: {
           trigger: hero,
           start: 'top top',
-          end: '+=1700',
+          end: '+=2200',              // longer travel → slower, controlled, cinematic
           pin: true,
           pinSpacing: true,
-          scrub: 1,                    // motion is driven by scroll position (smooth, reversible)
+          scrub: 1.3,                 // extra inertia → buttery, never abrupt
           anticipatePin: 1,
           invalidateOnRefresh: true,
           onToggle: (self) => setOverlay(self.isActive)
         }
       })
-        /* backdrop covers FAST (behind hero) so no dark/brown gap ever shows */
-        .to(explore, { opacity: 1, ease: 'power2.out', duration: 0.22 }, 0.0)
-        /* hero fades out smoothly, revealing the Explore backdrop */
-        .to([heroBg, heroCard, handwrite, goldEdge], { opacity: 0, scale: 0.97, filter: 'blur(10px)', ease: 'power2.inOut', duration: 0.5 }, 0.04)
-        /* Explore title + subtitle rise */
-        .fromTo(expTitle, { opacity: 0, y: 60 }, { opacity: 1, y: 0, ease: 'power3.out', duration: 0.4 }, 0.16)
-        .fromTo(expDiv,   { opacity: 0, y: 40 }, { opacity: 1, y: 0, ease: 'power3.out', duration: 0.4 }, 0.26)
+        /* backdrop cross-dissolves in behind the hero — covers early so no brown gap */
+        .to(explore, { opacity: 1, ease: 'power1.out', duration: 0.26 }, 0.0)
+        /* hero dissolves away (opacity + gentle scale + blur), one soft continuous fade */
+        .to([heroBg, heroCard, handwrite, goldEdge], { opacity: 0, scale: 0.97, filter: 'blur(10px)', ease: 'power2.inOut', duration: 0.62 }, 0.05)
+        /* Explore title, then subtitle rise (same rhythm) */
+        .fromTo(expTitle, { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.45 }, 0.30)
+        .fromTo(expDiv,   { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.45 }, 0.42)
         /* cards — 2 from TOP + 3 from BOTTOM together … */
-        .fromTo(cards[1], { opacity: 0, yPercent: -115, scale: 0.94 }, { opacity: 1, yPercent: 0, scale: 1, ease: 'power3.out', duration: 0.5 }, 0.4)   // card 2 (top)
-        .fromTo(cards[2], { opacity: 0, yPercent:  115, scale: 0.94 }, { opacity: 1, yPercent: 0, scale: 1, ease: 'power3.out', duration: 0.5 }, 0.4)   // card 3 (bottom)
+        .fromTo(cards[1], { opacity: 0, yPercent: -115, scale: 0.94 }, { opacity: 1, yPercent: 0, scale: 1, duration: 0.55 }, 0.55)   // card 2 (top)
+        .fromTo(cards[2], { opacity: 0, yPercent:  115, scale: 0.94 }, { opacity: 1, yPercent: 0, scale: 1, duration: 0.55 }, 0.55)   // card 3 (bottom)
         /* … then, as 2 & 3 nearly settle, 1 & 4 come and sit down */
-        .fromTo(cards[0], { opacity: 0, xPercent: -90, scale: 0.94 }, { opacity: 1, xPercent: 0, scale: 1, ease: 'power3.out', duration: 0.5 }, 0.66)   // card 1 (left)
-        .fromTo(cards[3], { opacity: 0, xPercent:  90, scale: 0.94 }, { opacity: 1, xPercent: 0, scale: 1, ease: 'power3.out', duration: 0.5 }, 0.66);  // card 4 (right)
+        .fromTo(cards[0], { opacity: 0, xPercent: -90, scale: 0.94 }, { opacity: 1, xPercent: 0, scale: 1, duration: 0.55 }, 0.82)   // card 1 (left)
+        .fromTo(cards[3], { opacity: 0, xPercent:  90, scale: 0.94 }, { opacity: 1, xPercent: 0, scale: 1, duration: 0.55 }, 0.82);  // card 4 (right)
     })();
   </script>
 </body>
