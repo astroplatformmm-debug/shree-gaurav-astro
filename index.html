@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -29,10 +28,9 @@
             
             --font-heading: 'Playfair Display', serif;
             --font-body: 'Lato', sans-serif;
-            --cubic-luxury: cubic-bezier(0.25, 1, 0.2, 1);
+            --cubic-luxury: cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* Reset & Reset Base styling */
         * {
             margin: 0;
             padding: 0;
@@ -46,12 +44,11 @@
             font-family: var(--font-body);
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Custom Scrollbar */
+        /* Premium Custom Smooth Scrollbar */
         ::-webkit-scrollbar {
-            width: 8px;
+            width: 7px;
         }
         ::-webkit-scrollbar-track {
             background: var(--warm-ivory);
@@ -64,13 +61,7 @@
             background: var(--primary-gold);
         }
 
-        /* Structural Layouts */
-        .scroller-wrapper {
-            width: 100%;
-            position: relative;
-        }
-
-        /* --- Cinematic Premium Preloader & Glass Reflection Screen --- */
+        /* --- Cinematic Preloader (Issue 1, 6) --- */
         .cinematic-curtain {
             position: fixed;
             top: 0;
@@ -82,7 +73,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            pointer-events: none;
             overflow: hidden;
         }
 
@@ -93,23 +83,23 @@
         }
 
         .curtain-star {
-            width: 48px;
-            height: 48px;
+            width: 54px;
+            height: 54px;
             fill: var(--primary-gold);
             margin-bottom: 1.5rem;
-            transform: scale(0);
+            transform: scale(0) rotate(-180deg);
+            opacity: 0;
         }
 
         .curtain-title {
             font-family: var(--font-heading);
             color: var(--warm-ivory);
-            font-size: 2.5rem;
-            letter-spacing: 2px;
+            font-size: 2.2rem;
+            letter-spacing: 4px;
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(30px);
         }
 
-        /* Glass Reflection Sweep Overlay */
         .glass-sweep {
             position: absolute;
             top: 0;
@@ -119,24 +109,22 @@
             background: linear-gradient(
                 90deg,
                 transparent 0%,
-                rgba(255, 255, 255, 0.03) 30%,
-                rgba(255, 255, 255, 0.13) 50%,
-                rgba(255, 255, 255, 0.03) 70%,
+                rgba(255, 255, 255, 0.02) 30%,
+                rgba(255, 255, 255, 0.12) 50%,
+                rgba(255, 255, 255, 0.02) 70%,
                 transparent 100%
             );
-            transform: skewX(-25deg);
+            transform: skewX(-30deg);
             z-index: 3;
         }
 
-        /* --- Global Fine Typography Rules --- */
         h1, h2, h3, h4 {
             font-family: var(--font-heading);
             color: var(--deep-charcoal);
             font-weight: 400;
-            line-height: 1.2;
         }
 
-        /* --- Premium Navigation Bar --- */
+        /* --- Luxury Navigation --- */
         .nav-container {
             position: fixed;
             top: 0;
@@ -147,11 +135,11 @@
             justify-content: space-between;
             align-items: center;
             z-index: 1000;
-            background: rgba(250, 247, 241, 0.85);
+            background: rgba(250, 247, 241, 0.8);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(230, 216, 195, 0.5);
-            transform: translateY(-100%);
+            border-bottom: 1px solid rgba(230, 216, 195, 0.4);
+            transform: translateY(-50px);
             opacity: 0;
         }
 
@@ -162,8 +150,8 @@
         }
 
         .logo-circle {
-            width: 44px;
-            height: 44px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             background: var(--deep-charcoal);
             border: 1px solid var(--primary-gold);
@@ -173,17 +161,16 @@
         }
 
         .logo-circle svg {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             fill: var(--primary-gold);
         }
 
         .logo-text {
             font-family: var(--font-heading);
-            font-size: 1.15rem;
-            font-weight: 500;
-            color: var(--deep-charcoal);
+            font-size: 1.1rem;
             letter-spacing: 0.5px;
+            color: var(--deep-charcoal);
         }
 
         .nav-links {
@@ -227,7 +214,6 @@
             transform-origin: left;
         }
 
-        /* Premium Luxury Buttons */
         .btn-luxury-nav {
             background-color: var(--muted-royal-gold);
             color: var(--warm-ivory);
@@ -237,8 +223,6 @@
             font-weight: 600;
             letter-spacing: 1.5px;
             text-decoration: none;
-            border: 1px solid transparent;
-            transition: all 0.4s var(--cubic-luxury);
             position: relative;
             overflow: hidden;
             z-index: 1;
@@ -263,18 +247,24 @@
             transform-origin: left;
         }
 
-        /* --- Hero Section Workspace --- */
-        .hero-section {
+        /* --- Main Immersive Architecture Canvas (Issue 3, 4, 7, 10) --- */
+        .master-window-wrapper {
             position: relative;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            padding: 0 6% 0 6%;
-            background-color: var(--soft-sand);
-            overflow: hidden;
+            width: 100%;
         }
 
-        /* Intricate Compositional Architecture Layering */
+        .hero-section {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 0 6%;
+            background-color: var(--soft-sand);
+            overflow: hidden;
+            will-change: transform;
+        }
+
         .hero-bg-composition {
             position: absolute;
             top: 0;
@@ -282,25 +272,25 @@
             width: 100%;
             height: 100%;
             z-index: 1;
-            opacity: 0.15;
+            opacity: 0.18;
             background-image: 
                 radial-gradient(circle at 30% 40%, var(--primary-gold) 0%, transparent 60%),
                 radial-gradient(circle at 85% 20%, var(--light-sand-grey) 0%, transparent 50%);
             pointer-events: none;
         }
 
-        /* Sacred Celestial Overlay Graphic Container */
         .celestial-backdrop-vector {
             position: absolute;
             left: 2%;
             top: 50%;
-            transform: translateY(-50%) rotate(0deg);
+            transform: translateY(-50%);
             width: 45vw;
             height: 45vw;
             max-width: 650px;
             opacity: 0.08;
             z-index: 2;
             pointer-events: none;
+            will-change: transform, opacity;
         }
 
         .hero-portrait-frame {
@@ -314,21 +304,24 @@
             overflow: hidden;
             border-top-left-radius: 400px;
             border-top-right-radius: 400px;
-            box-shadow: 0 30px 60px rgba(31, 27, 23, 0.08);
+            box-shadow: 0 30px 60px rgba(31, 27, 23, 0.06);
             border: 1px solid rgba(250, 247, 241, 0.4);
             background: linear-gradient(180deg, var(--light-sand-grey) 0%, var(--soft-sand) 100%);
             transform-origin: bottom center;
+            will-change: transform, opacity;
         }
 
-        /* Fallback refined graphic element acting inside frame context */
         .hero-portrait-mask-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: top center;
-            opacity: 0.95;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            height: 95%;
+            background: url('https://shree-gaurav-astro.vercel.app/static/media/guruji.bfb588de78b9ec648439.png') no-repeat bottom center;
+            background-size: contain;
             mix-blend-mode: multiply;
-            filter: contrast(1.05) brightness(0.98);
+            will-change: transform;
         }
 
         .hero-content-wrapper {
@@ -340,9 +333,9 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
+            will-change: transform, opacity;
         }
 
-        /* Subtle Ornamental Line Reveal Structural Container */
         .text-reveal-line {
             display: block;
             position: relative;
@@ -352,6 +345,7 @@
 
         .text-reveal-line span {
             display: inline-block;
+            will-change: transform;
         }
 
         .hero-main-title {
@@ -376,6 +370,7 @@
             margin-bottom: 2.25rem;
             max-width: 580px;
             font-weight: 400;
+            will-change: transform, opacity;
         }
 
         .hero-quote-block {
@@ -384,6 +379,7 @@
             border-left: 2px solid var(--primary-gold);
             margin-bottom: 3rem;
             max-width: 520px;
+            will-change: transform, opacity;
         }
 
         .hero-quote-text {
@@ -409,6 +405,7 @@
             transition: all 0.4s var(--cubic-luxury);
             position: relative;
             overflow: hidden;
+            will-change: transform, opacity;
         }
 
         .btn-hero-outline::before {
@@ -435,14 +432,17 @@
             transform-origin: top;
         }
 
-        /* Decorative Center Accent Separator */
+        /* Continuous Visual Connective Elements (Issue 4, 9) */
         .premium-divider {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 1.5rem;
-            padding: 2rem 0;
+            padding: 3rem 0;
             background-color: var(--warm-ivory);
+            position: relative;
+            z-index: 15;
+            border-top: 1px solid rgba(230, 216, 195, 0.3);
         }
 
         .premium-divider .line {
@@ -457,24 +457,25 @@
             fill: var(--primary-gold);
         }
 
-        /* --- Services Dynamic Grid Section --- */
+        /* --- Services Dynamic Matrix (Issue 5, 7, 8) --- */
         .services-section {
             position: relative;
-            padding: 8.5rem 6%;
+            padding: 10rem 6% 12rem 6%;
             background-color: var(--warm-ivory);
-            z-index: 10;
+            z-index: 20;
         }
 
         .services-header-box {
             text-align: center;
             max-width: 700px;
-            margin: 0 auto 5.5rem auto;
+            margin: 0 auto 6.5rem auto;
         }
 
         .services-section-title {
             font-size: clamp(2.2rem, 3.2vw, 3.5rem);
             margin-bottom: 1.25rem;
             letter-spacing: -0.5px;
+            will-change: transform, opacity;
         }
 
         .services-subtitle-decoration {
@@ -484,6 +485,9 @@
             letter-spacing: 3px;
             color: var(--primary-gold);
             font-weight: 500;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+            will-change: transform, opacity;
         }
 
         .services-matrix-grid {
@@ -493,7 +497,6 @@
             width: 100%;
         }
 
-        /* Handcrafted Micro-Architectural Card Layout */
         .premium-service-card {
             background: #FFFFFF;
             border: 1px solid var(--light-sand-grey);
@@ -501,8 +504,9 @@
             display: flex;
             flex-direction: column;
             position: relative;
-            transition: border-color 0.4s ease, box-shadow 0.5s var(--cubic-luxury);
+            transition: border-color 0.4s ease, box-shadow 0.6s var(--cubic-luxury);
             overflow: hidden;
+            will-change: transform, opacity;
         }
 
         .premium-service-card::before {
@@ -528,7 +532,6 @@
             border: 1px solid rgba(230, 216, 195, 0.4);
         }
 
-        /* Fine Decorative Placeholder pattern mimicry inside the frame */
         .card-graphic-frame::after {
             content: '';
             position: absolute;
@@ -577,10 +580,10 @@
             transition: transform 0.3s var(--cubic-luxury);
         }
 
-        /* Interactive Card States */
         .premium-service-card:hover {
             border-color: rgba(212, 162, 76, 0.5);
-            box-shadow: 0 25px 50px rgba(31, 27, 23, 0.06);
+            box-shadow: 0 30px 60px rgba(31, 27, 23, 0.06);
+            transform: translateY(-4px);
         }
 
         .premium-service-card:hover::before {
@@ -595,7 +598,7 @@
             transform: translateX(5px);
         }
 
-        /* --- Adaptive Responsive Engineering Grid Override rules --- */
+        /* --- Adaptive Responsive Grid Architecture --- */
         @media(max-width: 1400px) {
             .services-matrix-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -611,17 +614,18 @@
                 flex-direction: column;
                 justify-content: center;
                 padding: 120px 2.5rem 80px 2.5rem;
-                min-height: auto;
+                height: auto;
+                min-height: 100vh;
             }
             .hero-portrait-frame {
                 position: relative;
                 left: auto;
                 bottom: auto;
                 width: 100%;
-                max-width: 480px;
-                height: 450px;
+                max-width: 440px;
+                height: 440px;
                 margin-bottom: 4rem;
-                border-radius: 240px 240px 0 0;
+                border-radius: 220px 220px 0 0;
             }
             .hero-content-wrapper {
                 width: 100%;
@@ -632,7 +636,7 @@
 
         @media(max-width: 768px) {
             .nav-links {
-                display: none; /* Premium production builds integrate clean mobile drawers here */
+                display: none;
             }
             .services-matrix-grid {
                 grid-template-columns: 1fr;
@@ -659,7 +663,7 @@
         </div>
     </div>
 
-    <div class="scroller-wrapper">
+    <div class="master-window-wrapper">
         
         <!-- Luxury Navigation System -->
         <nav class="nav-container">
@@ -688,23 +692,18 @@
         <header class="hero-section" id="home">
             <div class="hero-bg-composition"></div>
             
-            <!-- Structural Sacred Geometrical Background Mandala Accent Layer -->
             <svg class="celestial-backdrop-vector" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="0.2"/>
                 <circle cx="50" cy="50" r="35" fill="none" stroke="currentColor" stroke-width="0.1" stroke-dasharray="1,1"/>
                 <path d="M50 0 v100 M0 50 h100 M15 15 l70 70 M15 85 l70-70" stroke="currentColor" stroke-width="0.15"/>
             </svg>
 
-            <!-- Portrait Framework Component Holder -->
             <div class="hero-portrait-frame">
-                <!-- Multiplied background visual backdrop context -->
                 <div style="width:100%; height:100%; background: radial-gradient(circle at 50% 40%, var(--soft-sand) 0%, var(--light-sand-grey) 100%); position:relative;">
-                    <!-- Absolute positional placeholder simulating structural placement for personal image profile matching reference exactly -->
-                    <div style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:90%; height:95%; background:url('https://shree-gaurav-astro.vercel.app/static/media/guruji.bfb588de78b9ec648439.png') no-repeat bottom center; background-size:contain; mix-blend-mode:multiply;"></div>
+                    <div class="hero-portrait-mask-img"></div>
                 </div>
             </div>
 
-            <!-- Master Copy Elements Right-Aligned Grid Column -->
             <div class="hero-content-wrapper">
                 <h1 class="hero-main-title">
                     <span class="text-reveal-line"><span>Three Decades of</span></span>
@@ -726,14 +725,14 @@
             </div>
         </header>
 
-        <!-- Micro Graphic Divider Segment -->
+        <!-- Connective Architectural Space Bridge -->
         <div class="premium-divider">
             <span class="line"></span>
             <svg viewBox="0 0 24 24"><path d="M12 0l3 9 9 3-9 3-3 9-3-9-9-3 9-3z"/></svg>
             <span class="line"></span>
         </div>
 
-        <!-- Services Product Specification Grid System Canvas -->
+        <!-- Services Section Grid System -->
         <section class="services-section" id="services">
             <div class="services-header-box">
                 <span class="services-subtitle-decoration">Core Offerings</span>
@@ -742,7 +741,6 @@
 
             <div class="services-matrix-grid">
                 
-                <!-- Service Card Object 1 -->
                 <div class="premium-service-card">
                     <div class="card-graphic-frame">
                         <div style="width:100%; height:100%; background: linear-gradient(135deg, rgba(243,227,198,0.3) 0%, rgba(230,216,195,0.5) 100%);"></div>
@@ -754,7 +752,6 @@
                     <a href="#" class="card-action-anchor">Learn More <span>&rarr;</span></a>
                 </div>
 
-                <!-- Service Card Object 2 -->
                 <div class="premium-service-card">
                     <div class="card-graphic-frame">
                         <div style="width:100%; height:100%; background: linear-gradient(135deg, rgba(243,227,198,0.3) 0%, rgba(230,216,195,0.5) 100%);"></div>
@@ -766,7 +763,6 @@
                     <a href="#" class="card-action-anchor">Learn More <span>&rarr;</span></a>
                 </div>
 
-                <!-- Service Card Object 3 -->
                 <div class="premium-service-card">
                     <div class="card-graphic-frame">
                         <div style="width:100%; height:100%; background: linear-gradient(135deg, rgba(243,227,198,0.3) 0%, rgba(230,216,195,0.5) 100%);"></div>
@@ -778,7 +774,6 @@
                     <a href="#" class="card-action-anchor">Learn More <span>&rarr;</span></a>
                 </div>
 
-                <!-- Service Card Object 4 -->
                 <div class="premium-service-card">
                     <div class="card-graphic-frame">
                         <div style="width:100%; height:100%; background: linear-gradient(135deg, rgba(243,227,198,0.3) 0%, rgba(230,216,195,0.5) 100%);"></div>
@@ -795,125 +790,149 @@
 
     </div>
 
-    <!-- Master Engine Integration Logic Orchestrating the Cinematic Experience Sequence -->
+    <!-- Master Orchestration Logic (Cinematic Architecture Strategy) -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             gsap.registerPlugin(ScrollTrigger);
 
-            // Timeline Orchestration Configurations
+            // --- Hide Elements Pre-Reveal (Issue 1) ---
+            gsap.set(".hero-main-title .text-reveal-line span", { yPercent: 105 });
+            gsap.set([".hero-body-description", ".hero-quote-block", ".btn-hero-outline"], { opacity: 0, y: 30 });
+            gsap.set(".hero-portrait-frame", { scale: 1.06, opacity: 0, y: 60 });
+            gsap.set(".celestial-backdrop-vector", { opacity: 0, scale: 0.9, rotation: -30 });
+
+            // --- 1. Pure Luxury Preloader & Reveal Sequence (Issue 1, 2, 6) ---
             const loadTimeline = gsap.timeline({
                 defaults: { ease: "power4.inOut" }
             });
 
-            // Stage 1: Preloading Star Animation Sweep
             loadTimeline
                 .to(".curtain-star", {
                     scale: 1,
-                    rotation: 360,
+                    rotation: 0,
+                    opacity: 1,
                     duration: 1.4,
-                    ease: "elastic.out(1, 0.75)"
+                    ease: "elastic.out(1, 0.8)"
                 })
                 .to(".curtain-title", {
                     opacity: 1,
                     y: 0,
-                    duration: 0.8
-                }, "-=0.8")
-                // Glass sweep animation sequence trigger
+                    duration: 0.9
+                }, "-=0.9")
                 .to(".glass-sweep", {
                     left: "150%",
-                    duration: 1.2,
-                    ease: "power2.inOut"
-                }, "-=0.4")
-                // Curtains slide out upwardly elegantly
+                    duration: 1.4
+                }, "-=0.5")
+                // Lift curtain with a slow exponential sweep
                 .to(".cinematic-curtain", {
                     yPercent: -100,
-                    duration: 1.4,
-                    ease: "power4.inOut"
-                }, "+=0.2")
+                    duration: 1.6,
+                    ease: "expo.inOut"
+                }, "+=0.1")
                 
-                // Stage 2: Navigation & Hero Seamless Component Entrance
+                // Orchestrated entry into the Hero Layout
                 .to(".nav-container", {
                     opacity: 1,
                     y: 0,
                     duration: 1.2,
-                    ease: "power4.out"
-                }, "-=0.6")
-                .from(".hero-portrait-frame", {
-                    scale: 1.08,
-                    y: 80,
-                    opacity: 0,
-                    duration: 1.6,
-                    ease: "power4.out"
-                }, "-=1.2")
-                .from(".celestial-backdrop-vector", {
-                    rotation: -25,
-                    opacity: 0,
-                    duration: 2,
                     ease: "power3.out"
-                }, "-=1.4")
-                .from(".hero-main-title .text-reveal-line span", {
-                    yPercent: 100,
-                    duration: 1.2,
-                    stagger: 0.12,
+                }, "-=0.7")
+                .to(".hero-portrait-frame", {
+                    opacity: 1,
+                    scale: 1,
+                    y: 0,
+                    duration: 1.8,
                     ease: "power4.out"
                 }, "-=1.3")
-                .from(".hero-body-description", {
-                    opacity: 0,
-                    y: 20,
-                    duration: 1,
+                .to(".celestial-backdrop-vector", {
+                    opacity: 0.08,
+                    scale: 1,
+                    rotation: 0,
+                    duration: 2.2,
                     ease: "power3.out"
-                }, "-=0.9")
-                .from(".hero-quote-block", {
-                    left: "-20px",
-                    opacity: 0,
-                    duration: 1,
+                }, "-=1.6")
+                .to(".hero-main-title .text-reveal-line span", {
+                    yPercent: 0,
+                    duration: 1.4,
+                    stagger: 0.12,
+                    ease: "power4.out"
+                }, "-=1.4")
+                .to([".hero-body-description", ".hero-quote-block", ".btn-hero-outline"], {
+                    opacity: 1,
+                    y: 0,
+                    duration: 1.2,
+                    stagger: 0.12,
                     ease: "power3.out"
-                }, "-=0.8")
-                .from(".btn-hero-outline", {
-                    opacity: 0,
-                    y: 20,
-                    duration: 0.9,
-                    ease: "power3.out"
-                }, "-=0.7");
+                }, "-=1.0");
 
-            // Stage 3: High-End Architectural Parallax First Scroll Transitions Sequence
-            gsap.to(".hero-portrait-frame", {
-                yPercent: 12,
-                scale: 0.96,
-                scrollTrigger: {
-                    trigger: ".hero-section",
-                    start: "top top",
-                    end: "bottom top",
-                    scrub: true
-                }
-            });
 
-            gsap.to(".hero-content-wrapper", {
-                yPercent: -8,
-                opacity: 0.3,
-                scrollTrigger: {
-                    trigger: ".hero-section",
-                    start: "top top",
-                    end: "bottom top",
-                    scrub: true
-                }
-            });
+            // --- 2. Advanced Multi-Axis Scroll Canvas (Issue 3, 4, 7, 10) ---
+            // Desktop window pinning forces user to absorb and control transition depth
+            if (window.innerWidth > 1024) {
+                const scrollTimeline = gsap.timeline({
+                    scrollTrigger: {
+                        trigger: ".hero-section",
+                        start: "top top",
+                        end: "+=130%", 
+                        pin: true,
+                        scrub: 1.5, // Heavy luxurious fluid drag pacing (Issue 6)
+                        invalidateOnRefresh: true
+                    }
+                });
 
-            gsap.to(".celestial-backdrop-vector", {
-                rotation: 45,
-                scrollTrigger: {
-                    trigger: ".hero-section",
-                    start: "top top",
-                    end: "bottom top",
-                    scrub: true
-                }
-            });
+                scrollTimeline
+                    // Parallax: portrait drops slightly and fades backwards
+                    .to(".hero-portrait-frame", {
+                        yPercent: 15,
+                        scale: 0.94,
+                        opacity: 0.4,
+                        ease: "none"
+                    }, 0)
+                    .to(".hero-portrait-mask-img", {
+                        yPercent: 8,
+                        ease: "none"
+                    }, 0)
+                    // Content components move away at independent variable speeds (Issue 7)
+                    .to(".hero-main-title .text-reveal-line span", {
+                        yPercent: -60,
+                        opacity: 0,
+                        stagger: 0.03,
+                        ease: "none"
+                    }, 0)
+                    .to(".hero-body-description", {
+                        yPercent: -40,
+                        opacity: 0,
+                        ease: "none"
+                    }, 0)
+                    .to(".hero-quote-block", {
+                        yPercent: -25,
+                        opacity: 0,
+                        ease: "none"
+                    }, 0)
+                    .to(".btn-hero-outline", {
+                        yPercent: -15,
+                        opacity: 0,
+                        ease: "none"
+                    }, 0)
+                    // Celestial background symbol spins slowly deep into space
+                    .to(".celestial-backdrop-vector", {
+                        rotation: 60,
+                        scale: 0.8,
+                        opacity: 0,
+                        ease: "none"
+                    }, 0)
+                    // Metamorphosis of background canvas structure
+                    .to(".hero-section", {
+                        backgroundColor: "#FAF7F1",
+                        ease: "none"
+                    }, 0);
+            }
 
-            // Stage 4: Premium Progressive Section Card Reveals Matrix Sequence
+            // --- 3. Progressive Services Matrix Reveal (Issue 5, 9) ---
             const servicesTimeline = gsap.timeline({
                 scrollTrigger: {
                     trigger: ".services-section",
-                    start: "top 75%",
+                    start: "top 80%",
                     toggleActions: "play none none none"
                 }
             });
@@ -921,26 +940,24 @@
             servicesTimeline
                 .from(".services-subtitle-decoration", {
                     opacity: 0,
-                    y: 15,
-                    duration: 0.8,
+                    y: 20,
+                    duration: 1,
                     ease: "power3.out"
                 })
                 .from(".services-section-title", {
                     opacity: 0,
-                    y: 25,
-                    duration: 1,
+                    y: 30,
+                    duration: 1.2,
                     ease: "power4.out"
-                }, "-=0.6")
+                }, "-=0.8")
                 .from(".premium-service-card", {
                     opacity: 0,
-                    y: 50,
-                    duration: 1.4,
-                    stagger: 0.15,
+                    y: 60,
+                    duration: 1.6,
+                    stagger: 0.18, // Intentional rhythm step
                     ease: "power4.out"
-                }, "-=0.7");
+                }, "-=0.8");
         });
     </script>
 </body>
 </html>
-
-```
